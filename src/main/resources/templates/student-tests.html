@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông tin bài làm của sinh viên</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .quiz-name {
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .table-container {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        ul li {
+            margin-bottom: 5px;
+        }
+
+        .btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 5px;
+            background-color: #0077cc; /* Màu xanh biển á */
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none; /* Remove underline */
+            max-width: 200px; /* Độ rộng tối đa của nút */
+            width: 100%; /* Rộng bằng 100% của container cha */
+            text-align: center; /* Căn giữa nút */
+        }
+
+        .btn:hover {
+            background-color: #005faa; /* Màu xanh biển á tối */
+        }
+
+    </style>
+    <script>
+        var quizIds = [];
+    </script>
+
+</head>
+<body>
+
+<div class="container">
+    <h2>Thông tin bài làm của sinh viên</h2>
+
+    <div class="table-container">
+        <table border="1" id="testTable">
+            <tr>
+                <th>Bài kiểm tra</th>
+                <th>ID</th>
+
+            </tr>
+            <tr th:each="quiz : ${quizData}" onclick="getQuizDetails('${quiz.name}')">
+                <td th:text="${quiz.name} + ' - ' + ${quiz.id}"></td>
+            </tr>
+
+        </table>
+    </div>
+</div>
+
+<a class="btn" th:href="@{/students-and-courses}">Trở lại</a>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
+        const studentId = urlParams.get('studentId');
+
+        const formData = new FormData();
+        formData.append('courseId', courseId);
+        formData.append('studentId', studentId);
+
+        fetch(`/student-tests`, {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Xử lý dữ liệu JSON nhận được
+                const quizData = data; // Giả sử data là một mảng các object chứa ID và name của các bài kiểm tra
+                // Cập nhật giao diện người dùng
+                const tableBody = document.querySelector('#testTable tbody');
+                quizData.forEach(quiz => {
+                    const row = document.createElement('tr');
+                    const nameCell = document.createElement('td');
+                    const idCell = document.createElement('td');
+                    nameCell.textContent = quiz.name;
+                    idCell.textContent = quiz.id;
+                    row.appendChild(nameCell);
+                    row.appendChild(idCell);
+                    row.addEventListener('click', function() {
+                        window.location.href = '/student-attempts?studentId=' + studentId + '&quizId=' + quiz.id;
+                    });
+                    tableBody.appendChild(row);
+                    // Cập nhật danh sách ID
+                    quizIds.push(quiz.id);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+
+    });
+
+</script>
+
+
+</body>
+</html>

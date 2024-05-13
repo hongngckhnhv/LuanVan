@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tìm kiếm sinh viên và khóa học</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      max-width: 800px; /* Tăng kích thước của container */
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      width: 300px;
+      margin-right: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    #studentInfo {
+      background-color: #f9f9f9;
+      padding: 20px;
+      border-radius: 5px;
+    }
+
+    .table-container {
+      margin: 50px;
+    }
+
+    table {
+      width: 100%; /* Bảng chiếm toàn bộ chiều rộng của container */
+      border-collapse: collapse; /* Loại bỏ khoảng cách giữa các ô */
+    }
+
+    table th, table td {
+      padding: 10px; /* Tăng độ dày của nội dung trong ô */
+      border: 1px solid #ddd; /* Tạo đường viền cho các ô */
+    }
+
+    table th {
+      background-color: #f2f2f2; /* Màu nền cho tiêu đề */
+    }
+
+    table td {
+      text-align: left; /* Căn lề nội dung trong ô */
+    }
+
+    ul {
+      list-style-type: none; /* Ẩn chấm tròn của danh sách */
+      padding: 0; /* Loại bỏ padding mặc định của danh sách */
+    }
+
+    ul li {
+      margin-bottom: 5px; /* Tạo khoảng cách giữa các mục trong danh sách */
+    }
+
+
+    .btn {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 5px;
+      background-color: #0077cc; /* Màu xanh biển á */
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      text-decoration: none; /* Remove underline */
+      max-width: 200px; /* Độ rộng tối đa của nút */
+      width: 100%; /* Rộng bằng 100% của container cha */
+      text-align: center; /* Căn giữa nút */
+    }
+
+    .btn:hover {
+      background-color: #005faa; /* Màu xanh biển á tối */
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Tìm kiếm sinh viên và khóa học</h2>
+
+  <form action="/students-and-courses" method="post">
+    <label for="firstname">Tên sinh viên:</label>
+    <input type="text" id="firstname" name="firstname">
+    <button type="submit">Tìm kiếm</button>
+  </form>
+
+  <div id="studentInfo" class="table-container">
+    <!-- Hiển thị thông tin sinh viên -->
+    <table border="1" id="studentTable">
+      <tr>
+        <th>ID</th>
+        <th>Full name</th>
+        <th>Email</th>
+        <th>Courses</th>
+      </tr>
+      <tr th:if="${not #lists.isEmpty(userIds)}" th:each="userId, iterStat : ${userIds}">
+        <td th:text="${userId}">ID</td>
+        <td th:text="${fullNames[iterStat.index]}">Full name</td>
+        <td th:text="${emails[iterStat.index]}">Email</td>
+        <td>
+          <ul>
+            <li class="course" th:each="courseId : ${courseIds[iterStat.index]}" th:text="${courseId}"
+                th:attr="data-student-id=${userId}, data-course-id=${courseId}">
+            </li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<a class="btn" th:href="@{/layout_course}">List course</a>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var courseListItems = document.querySelectorAll('.course');
+
+    courseListItems.forEach(function(item) {
+      item.addEventListener('click', function() {
+        var courseId = item.textContent.split(' ')[0]; // Lấy chỉ ID của khóa học
+        var studentId = item.getAttribute('data-student-id'); // Lấy student ID
+        // alert('Bạn đã chọn khóa học có ID là ' + courseId + ' của sinh viên có ID là ' + studentId);
+        window.location.href = '/student-tests?studentId=' + studentId + '&courseId=' + courseId; // Chuyển hướng đến trang hiển thị thông tin bài làm của sinh viên cho khóa học này
+      });
+    });
+  });
+
+
+</script>
+
+
+</body>
+</html>

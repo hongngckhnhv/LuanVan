@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}"
+>
+<head>
+    <meta charset="UTF-8">
+    <link layout:href="@{/css/styles.css}" rel="stylesheet" />
+    <title>Đăng nhập</title>
+
+    <style>
+        .notification, .notification-success{
+            background-color: #FA8072;
+            color: #fff;
+            padding: 10px;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        .notification-success{
+            background-color: #3CB371;
+        }
+
+        .header-title, .btn {
+            color: #fff;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body id="page-top"  layout:fragment="body">
+<header class="masthead">
+    <div class="container px-4 px-lg-5 h-100">
+        <div class="row gx-4 gx-lg-5 h-100 align-items-center justify-content-center text-center">
+            <div class="col-lg-5 align-self-lg-center">
+                <div class="container ">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Full name</th>
+                                <th>Short name</th>
+                                <th>Category</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+</body>
+</html>

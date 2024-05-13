@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông tin bài làm của sinh viên</title>
+    <style>
+        /* CSS cho phần thông tin bài làm */
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        /* CSS cho bảng thông tin */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #f2f2f2;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* CSS cho nút "Trở lại" */
+
+        .btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 5px;
+            background-color: #0077cc; /* Màu xanh biển á */
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none; /* Remove underline */
+            max-width: 200px; /* Độ rộng tối đa của nút */
+            width: 100%; /* Rộng bằng 100% của container cha */
+            text-align: center; /* Căn giữa nút */
+        }
+
+        .btn:hover {
+            background-color: #005faa; /* Màu xanh biển á tối */
+        }
+
+
+        /* CSS cho phần chi tiết câu hỏi */
+        .detail-element {
+            margin-top: 30px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .detail-element h3 {
+            margin-top: 0;
+            color: #0077cc;
+            font-size: 18px;
+        }
+
+        .detail-element p {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        /* Thay đổi màu cho phần câu trả lời của sinh viên và câu trả lời đúng */
+        .student-response {
+            color: #e68a00; /* Màu cam */
+        }
+
+        .correct-response {
+            color: #009933; /* Màu xanh lá cây */
+        }
+
+        .incorrect-response {
+            color: #ff0000; /* Màu đỏ */
+        }
+
+        .choice {
+            display: block; /* Hiển thị mỗi lựa chọn trên một dòng mới */
+            margin-bottom: 5px; /* Tạo khoảng cách giữa các lựa chọn */
+        }
+
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Thông tin bài làm của sinh viên</h2>
+    <table border="1">
+        <thead>
+        <tr>
+            <th>Attempt ID</th>
+            <th>Score</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Data will be populated here -->
+        </tbody>
+    </table>
+    <a class="btn" href="/students-and-courses">Trở lại</a>
+    <div id="detail-container"></div> <!-- Container for displaying details -->
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const studentId = urlParams.get('studentId');
+        const quizId = urlParams.get('quizId');
+
+        const formData = new FormData();
+        formData.append('studentId', studentId);
+        formData.append('quizId', quizId);
+
+        fetch(`/student-attempts`, {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Display attempts in table
+                displayAttempts(data);
+
+                // Automatically display details for the first attempt
+                if (data.length > 0) {
+                    displayDetails(data[0]);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+        function displayAttempts(attemptList) {
+            const tableBody = document.querySelector('tbody');
+            tableBody.innerHTML = '';
+
+            attemptList.forEach(attempt => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${attempt.attemptId}</td>
+                    <td>${attempt.score}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function displayDetails(attempt) {
+            const detailContainer = document.getElementById('detail-container');
+            detailContainer.innerHTML = ''; // Clear previous details
+
+            let questionNumber = 1; // Bắt đầu đếm từ câu hỏi đầu tiên
+
+            attempt.questionDetails.forEach(detail => {
+                const questionText = detail.questionText;
+                const studentResponse = detail.studentResponse;
+                const correctResponse = detail.correctResponse;
+
+                // Tách câu trả lời của sinh viên thành các lựa chọn riêng biệt
+                const studentChoices = studentResponse.split(". ");
+
+                const detailElement = document.createElement('div');
+                detailElement.classList.add('detail-element'); // Thêm class cho phần tử
+
+                // Tạo một HTML string để hiển thị câu hỏi, câu trả lời của sinh viên và câu trả lời đúng
+                let htmlString = `
+                    <h3>Câu Hỏi ${questionNumber}:</h3>
+                    <p>${questionText}</p>
+                    <h3>Đáp án:</h3>
+                `;
+                // Hiển thị từng lựa chọn của sinh viên trên một dòng riêng biệt
+                studentChoices.forEach(choice => {
+                    htmlString += `<p>${choice}</p>`;
+                });
+
+                // Thêm câu trả lời đúng vào HTML string
+                htmlString += `<h3>Câu Trả Lời Đúng:</h3>
+                       <p class="correct-response">${correctResponse}</p>`;
+
+                detailElement.innerHTML = htmlString;
+                detailContainer.appendChild(detailElement);
+
+                questionNumber++; // Tăng số câu hỏi lên cho lần lặp tiếp theo
+            });
+        }
+
+
+
+    });
+</script>
+
+</body>
+</html>
