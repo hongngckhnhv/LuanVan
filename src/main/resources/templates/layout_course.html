@@ -1,9 +1,7 @@
 <!DOCTYPE html>
-<html
-        xmlns:th="http://www.thymeleaf.org"
-        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-        xmlns:sec="http://www.thymeleaf.org"
->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org">
 <head th:fragment="header">
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -14,18 +12,47 @@
     <!-- Core theme CSS (includes Bootstrap)-->
     <link th:href="@{/css/styles.css}" rel="stylesheet" />
     <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">E - Course</title>
+    <style>
+        /* Đảm bảo body chiếm toàn bộ chiều cao trang */
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Nội dung chính của trang, cho phép nội dung tự giãn */
+        .content {
+            flex: 1;
+        }
+
+        /* Chân trang */
+        footer {
+            background-color: #343a40; /* Màu nền tối */
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+    </style>
 </head>
+<body layout:fragment="body">
+<!-- Navigation-->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container px-5">
-        <a class="navbar-brand" href="/home">List Course</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+        <a class="navbar-brand" th:href="@{/home}">List Course</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link" th:href="@{/home}">Home</a></li>
                 <li class="nav-item"><a class="nav-link" th:href="@{/create_course}">Add course</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/categories}">Add new category</a></li>
                 <li sec:authorize="isAuthenticated()" class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdownPortfolio" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Welcome</a>
-                    <ul  class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownPortfolio">
+                    <a class="nav-link dropdown-toggle" id="navbarDropdownPortfolio" href="#" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">Welcome</a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownPortfolio">
                         <li><a class="dropdown-item" th:href="@{/clubs/new}">Create Running Club</a></li>
                         <li><a class="dropdown-item" th:href="@{/logout}">Logout</a></li>
                     </ul>
@@ -34,62 +61,79 @@
         </div>
     </div>
 </nav>
-<body layout:fragment="body"></body>
-<section class="py-5 bg-light">
-    <div class="container px-5 my-5">
-        <h5 class="display-4 fw-bolder mb-4">Let's build together</h5>
-        <a class="btn btn-lg btn-primary" th:href="@{/create_course}">Add new course</a>
-        <a class="btn btn-lg btn-primary" th:href="@{/students-and-courses}">List of students</a>
-    </div>
 
-    <header class="masthead">
-        <div class="container px-4 px-lg-5 h-100">
-            <div class="row gx-4 gx-lg-5 h-100 align-items-center justify-content-center text-center">
-                <div class="col-lg-5 align-self-lg-center">
-                    <div class="container ">
-                        <table class="table table-bordered">
-                            <thead class="thead-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>Full name</th>
-                                <th>Short name</th>
-                                <th>Category</th>
-                                <th>Action</th>
-                            </tr>
-                            </thead>
+<!-- Main Section-->
+<section class="py-5 bg-light content"> <!-- Thêm lớp .content -->
+    <div class="container mt-5">
+        <!-- Display Categories -->
+        <h3>Categories</h3>
+        <table class="table table-bordered">
+            <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="category : ${categories}">
+                <td th:text="${category.id}"></td> <!-- Display category ID -->
+                <td th:text="${category.name}"></td> <!-- Display category name -->
+                <td style="white-space: nowrap">
+                    <a class="btn btn-primary btn-sm"
+                       th:href="@{/courses-by-category/{id}(id=${category.id})}">View Courses</a>
+                    <a class="btn btn-primary btn-sm"
+                       th:href="@{/edit_category(id=${category.id})}">Edit</a>
+                    <form th:action="@{/delete_category}" method="post" style="display: inline;">
+                        <input type="hidden" name="id" th:value="${category.id}" />
+                        <button class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
 
-                            <tbody>
-                                <tr th:each="course : ${courses}">
-                                    <td th:text="${course.id}"></td>
-                                    <td th:text="${course.fullname}"></td>
-                                    <td th:text="${course.shortname}"></td>
-                                    <td th:text="${course.category}"></td>
-                                    <td style="white-space: nowrap">
-                                        <a class="btn btn-primary btn-sm"
-                                           th:href="@{/edit_course(id=${course.id})}">Edit
-                                        </a>
-
-                                        <a class="btn btn-danger btn-sm"
-                                           th:href="@{/delete_course(id=${course.id})}"
-                                            onclick="return confirm('Are you sure???')">Delete
-                                        </a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+        <!-- Display Courses (Conditional) -->
+        <div class="mt-5" th:if="${courses != null}">
+            <h3>Courses</h3>
+            <table class="table table-bordered">
+                <thead class="thead-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Full Name</th>
+                    <th>Short Name</th>
+                    <th>Category</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="course : ${courses}">
+                    <td th:text="${course.id}"></td> <!-- Display course ID -->
+                    <td th:text="${course.fullname}"></td> <!-- Display course full name -->
+                    <td th:text="${course.shortname}"></td> <!-- Display course short name -->
+                    <td th:text="${course.category}"></td> <!-- Display course category -->
+                    <td style="white-space: nowrap">
+                        <a class="btn btn-primary btn-sm"
+                           th:href="@{/edit_course(id=${course.id})}">Edit</a>
+                        <form th:action="@{/delete_course}" method="post" style="display: inline;">
+                            <input type="hidden" name="id" th:value="${course.id}" />
+                            <button class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
-    </header>
-
+    </div>
 </section>
-</main>
+
 <!-- Footer-->
 <footer class="bg-dark py-4 mt-auto">
     <div class="container px-5">
         <div class="row align-items-center justify-content-between flex-column flex-sm-row">
-            <div class="col-auto"><div class="small m-0 text-white">Copyright &copy; B2013538</div></div>
+            <div class="col-auto">
+                <div class="small m-0 text-white">Copyright &copy; B2013538</div>
+            </div>
             <div class="col-auto">
                 <a class="link-light small" href="#!">Privacy</a>
                 <span class="text-white mx-1">&middot;</span>
@@ -100,8 +144,10 @@
         </div>
     </div>
 </footer>
+
 <!-- Bootstrap core JS-->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Core theme JS-->
 <script src="js/scripts.js"></script>
+</body>
 </html>

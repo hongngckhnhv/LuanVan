@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thông tin bài làm của sinh viên</title>
     <style>
-        /* CSS cho phần thông tin bài làm */
         .container {
             max-width: 800px;
             margin: 50px auto;
@@ -20,7 +19,6 @@
             color: #333;
         }
 
-        /* CSS cho bảng thông tin */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -38,7 +36,10 @@
             font-weight: bold;
         }
 
-        /* CSS cho nút "Trở lại" */
+        table tbody tr:hover {
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
 
         .btn {
             display: block;
@@ -49,22 +50,20 @@
             text-transform: uppercase;
             border: none;
             border-radius: 5px;
-            background-color: #0077cc; /* Màu xanh biển á */
+            background-color: #0077cc;
             color: white;
             cursor: pointer;
             transition: background-color 0.3s;
-            text-decoration: none; /* Remove underline */
-            max-width: 200px; /* Độ rộng tối đa của nút */
-            width: 100%; /* Rộng bằng 100% của container cha */
-            text-align: center; /* Căn giữa nút */
+            text-decoration: none;
+            max-width: 200px;
+            width: 100%;
+            text-align: center;
         }
 
         .btn:hover {
-            background-color: #005faa; /* Màu xanh biển á tối */
+            background-color: #005faa;
         }
 
-
-        /* CSS cho phần chi tiết câu hỏi */
         .detail-element {
             margin-top: 30px;
             border: 1px solid #ddd;
@@ -84,24 +83,22 @@
             font-size: 16px;
         }
 
-        /* Thay đổi màu cho phần câu trả lời của sinh viên và câu trả lời đúng */
         .student-response {
-            color: #e68a00; /* Màu cam */
+            color: #e68a00;
         }
 
         .correct-response {
-            color: #009933; /* Màu xanh lá cây */
+            color: #009933;
         }
 
         .incorrect-response {
-            color: #ff0000; /* Màu đỏ */
+            color: #ff0000;
         }
 
         .choice {
-            display: block; /* Hiển thị mỗi lựa chọn trên một dòng mới */
-            margin-bottom: 5px; /* Tạo khoảng cách giữa các lựa chọn */
+            display: block;
+            margin-bottom: 5px;
         }
-
 
     </style>
 </head>
@@ -162,6 +159,7 @@
                     <td>${attempt.attemptId}</td>
                     <td>${attempt.score}</td>
                 `;
+                row.addEventListener('click', () => displayDetails(attempt));
                 tableBody.appendChild(row);
             });
         }
@@ -189,9 +187,12 @@
                     <p>${questionText}</p>
                     <h3>Đáp án:</h3>
                 `;
-                // Hiển thị từng lựa chọn của sinh viên trên một dòng riêng biệt
+
+                // Hiển thị từng lựa chọn của sinh viên trên một dòng riêng biệt và kiểm tra đáp án đúng
                 studentChoices.forEach(choice => {
-                    htmlString += `<p>${choice}</p>`;
+                    const isCorrect = correctResponse.includes(choice.trim());
+                    const choiceClass = isCorrect ? 'correct-response' : 'incorrect-response';
+                    htmlString += `<p class="${choiceClass}">${choice}</p>`;
                 });
 
                 // Thêm câu trả lời đúng vào HTML string
@@ -204,9 +205,6 @@
                 questionNumber++; // Tăng số câu hỏi lên cho lần lặp tiếp theo
             });
         }
-
-
-
     });
 </script>
 

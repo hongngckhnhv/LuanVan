@@ -47,55 +47,56 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public String registerSave(@ModelAttribute("user")UserDto userDto, Model model) {
-        User user = userService.findByUsername(userDto.getUsername()); //kiem tra trung username
-        if(user != null) {
-            model.addAttribute("userexist", user);
-            return "username da ton tai";
+    public String registerSave(@ModelAttribute("user") UserDto userDto, Model model) {
+        User user = userService.findByUsername(userDto.getUsername());
+        if (user != null) {
+            model.addAttribute("userexist", "Username đã tồn tại.");
+            return "register";
         }
+
+        // Kiểm tra mật khẩu rỗng
+        if (userDto.getPassword() == null || userDto.getPassword().isEmpty()) {
+            model.addAttribute("passwordError", "Password không được để trống.");
+            return "register";
+        }
+
+        // Kiểm tra mật khẩu có chứa ký tự đặc biệt
+        if (!userDto.getPassword().matches(".*[!@#$%^&*(),.?\":{}|<>].*")) {
+            model.addAttribute("passwordError", "Password phải chứa ít nhất một ký tự đặc biệt.");
+            return "register";
+        }
+
+        // Kiểm tra mật khẩu có chứa ít nhất một chữ cái viết hoa
+        if (!userDto.getPassword().matches(".*[A-Z].*")) {
+            model.addAttribute("passwordError", "Password phải chứa ít nhất một chữ cái viết hoa.");
+            return "register";
+        }
+
+        // Kiểm tra mật khẩu có chứa ít nhất một chữ cái viết thường
+        if (!userDto.getPassword().matches(".*[a-z].*")) {
+            model.addAttribute("passwordError", "Password phải chứa ít nhất một chữ cái viết thường.");
+            return "register";
+        }
+
         userService.save(userDto);
         String moodleResponse = createMoodleUser(userDto);
-        // Xử lý phản hồi từ Moodle
-        if (moodleResponse != null && moodleResponse.contains("success")) {
-            // Trả về trang thông báo tạo tài khoản thành công
-            return "redirect:/register?success";
+
+        // Kiểm tra phản hồi từ Moodle (giả sử nó là JSON)
+        if (moodleResponse != null && moodleResponse.contains("\"id\":")) {
+            model.addAttribute("successMessage", "Đăng ký thành công.");
+            return "register";
         } else {
-            // Trả về trang thông báo lỗi khi tạo tài khoản trong Moodle
-            return "redirect:/register?success";
+            model.addAttribute("errorMessage", "Đăng ký không thành công. Vui lòng thử lại.");
+            return "register";
         }
     }
 
-//    @PostMapping("/register")
-//    public String registerSave(@ModelAttribute("user") UserDto userDto, Model model) {
-//        User user = userService.findByUsername(userDto.getUsername()); // Kiểm tra trùng username
-//        if (user != null) {
-//            model.addAttribute("userexist", user);
-//            return "username da ton tai";
-//        }
-//
-//        userService.save(userDto);
-//        String moodleResponse = createMoodleUser(userDto);
-//
-//        // Kiểm tra mã trạng thái HTTP của phản hồi từ Moodle
-//        if (moodleResponse != null && moodleResponse.equals("200")) {
-//            // Phản hồi thành công từ Moodle, xử lý phản hồi chi tiết để xác định tạo tài khoản thành công hay không
-//            if (moodleResponse.contains("success")) {
-//                // Trả về trang thông báo tạo tài khoản thành công
-//                return "redirect:/register?success=true";
-//            } else {
-//                // Trả về trang thông báo lỗi khi tạo tài khoản trong Moodle
-//                return "redirect:/register?error=true";
-//            }
-//        } else {
-//            // Lỗi khi gửi yêu cầu tạo tài khoản đến Moodle, có thể xử lý theo ý của bạn, ví dụ hiển thị thông báo lỗi cho người dùng
-//            return "redirect:/register?error=true";
-//        }
-//    }
+
 
 
     private String createMoodleUser(UserDto userDto) {
-        String token = "388cdd1555fc753635b67bbba524ef87"; // Thay thế bằng token của Moodle của bạn
-        String domainName = "http://localhost/demo.ngockhanh.vn"; // Thay thế bằng domain của Moodle của bạn
+        String token = "2f8b6d0d241565fd8731dcabcf342e3e"; // Thay thế bằng token của Moodle của bạn
+        String domainName = "http://localhost/demo.hoangngockhanh.vn"; // Thay thế bằng domain của Moodle của bạn
         String functionName = "core_user_create_users";
 
         // Xây dựng các tham số cho cuộc gọi API của Moodle
@@ -122,14 +123,11 @@ public class UserController {
         String response = restTemplate.postForObject(serverUrl, request, String.class);
 
         System.out.println(response);
+        System.out.println(serverUrl);
+        System.out.println(parameters);
         // Trả về phản hồi từ Moodle
         return response;
 
     }
-
-//    @GetMapping("/courses_list")
-//    public String showSource() {
-//        return "course_list";
-//    }
 
 }

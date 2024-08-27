@@ -32,7 +32,7 @@ public class SecurityConfig {
 
                 .requestMatchers("/create_course", "/layout_course", "/edit_course", "/delete_course",
                         "/students-and-courses", "/student-tests/{testId}", "/student-tests",
-                        "/student-attempts", "//student-attempts/{quizId}").authenticated() // Chỉ yêu cầu người dùng đã xác thực truy cập /signature
+                        "/student-attempts", "//student-attempts/{quizId}", "/categories").authenticated() // Chỉ yêu cầu người dùng đã xác thực truy cập /signature
                 .requestMatchers("/student-test").permitAll()
                 .requestMatchers("/register").permitAll()
                 .requestMatchers("/home", "/css/**", "/js/**").permitAll().and()

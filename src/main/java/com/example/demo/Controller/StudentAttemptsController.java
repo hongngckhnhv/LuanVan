@@ -5,6 +5,8 @@ import com.example.demo.Model.QuestionDetail;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -102,54 +104,54 @@ public class StudentAttemptsController {
 
     // Method to get details for each attempt
 // Method to get details for each attempt
+    // Method to get details for each attempt
     private List<QuestionDetail> getAttemptDetails(Integer attemptId) {
         List<QuestionDetail> questionDetails = new ArrayList<>();
         try {
-            // Replace with your Moodle token and domain
             String token = "3cc2d13c0b1ee13c59cb3757239b30e5";
             String domainName = "http://localhost/demo.ngockhanh.vn";
             String getAttemptReviewFunction = "mod_quiz_get_attempt_review";
 
-            // Construct the URL to get attempt review
             String getAttemptReviewUrl = domainName + "/webservice/rest/server.php" +
                     "?wstoken=" + token +
                     "&wsfunction=" + getAttemptReviewFunction +
                     "&moodlewsrestformat=json" +
                     "&attemptid=" + attemptId;
 
-            // Call the API to get attempt review
             String attemptReviewResponse = restTemplate.getForObject(getAttemptReviewUrl, String.class);
 
             System.out.println(getAttemptReviewUrl);
 
-            // Parse JSON response to get attempt review
             JSONObject reviewJson = new JSONObject(attemptReviewResponse);
             JSONArray questionArray = reviewJson.getJSONArray("questions");
 
-            // Process question array to build QuestionDetail objects
             for (int i = 0; i < questionArray.length(); i++) {
                 JSONObject questionJson = questionArray.getJSONObject(i);
 
-                // Extract necessary information from questionJson and create QuestionDetail objects
                 QuestionDetail questionDetail = new QuestionDetail();
 
-                // Get HTML from JSON and clean it using Jsoup
-                String questionHtml = questionJson.optString("html", ""); // Lấy trường HTML từ đối tượng JSON
+                String questionHtml = questionJson.optString("html", "");
                 Document doc = Jsoup.parse(questionHtml);
 
-                // Lấy các phần tử trong HTML và trích xuất thông tin
-                String questionText = doc.select(".qtext").text(); // Lấy nội dung của câu hỏi
-                String studentResponse = doc.select(".answer").text(); // Lấy câu trả lời của sinh viên
-                String correctResponse = doc.select(".feedback").text(); // Lấy câu trả lời đúng
+                String questionText = doc.select(".qtext").text();
+                String correctResponse = doc.select(".rightanswer").text();
 
-                // Thiết lập các giá trị đã lấy được vào đối tượng QuestionDetail
+                Elements answerElements = doc.select(".answer .r0, .answer .r1");
+                String studentResponse = "";
+                for (Element answerElement : answerElements) {
+                    if (answerElement.select("input[checked=checked]").size() > 0) {
+                        studentResponse = answerElement.text();
+                        break;
+                    }
+                }
+
                 questionDetail.setQuestionText(questionText);
                 questionDetail.setStudentResponse(studentResponse);
                 questionDetail.setCorrectResponse(correctResponse);
 
-                // Thêm QuestionDetail vào danh sách
                 questionDetails.add(questionDetail);
-                System.out.println(questionDetails);
+                System.out.println("Student Response: " + studentResponse);
+                System.out.println("Correct Response: " + correctResponse);
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -160,5 +162,6 @@ public class StudentAttemptsController {
         }
         return questionDetails;
     }
+
 }
 

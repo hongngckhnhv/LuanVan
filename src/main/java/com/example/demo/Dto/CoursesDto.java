@@ -5,7 +5,7 @@ public class CoursesDto {
     private Integer webCourseId; // ID của khóa học trên Moodle
     private String fullname;
     private String shortname;
-    private String category;
+    private Integer category;
     private String description;
 
     public Integer getId() {
@@ -40,11 +40,11 @@ public class CoursesDto {
         this.shortname = shortname;
     }
 
-    public String getCategory() {
+    public Integer getCategory() {
         return category;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(Integer category) {
         this.category = category;
     }
 

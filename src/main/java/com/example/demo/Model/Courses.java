@@ -16,8 +16,10 @@ public class Courses {
 
     private String fullname;
     private String shortname;
-    private String category;
+    private Integer category;
     private String description;
+
+
 
     // Getters và setters
     public Integer getId() {
@@ -52,11 +54,11 @@ public class Courses {
         this.shortname = shortname;
     }
 
-    public String getCategory() {
+    public Integer getCategory() {
         return category;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(Integer category) {
         this.category = category;
     }
 
