@@ -33,13 +33,27 @@
             padding: 20px 0;
             text-align: center;
         }
+
+        /* Table styles */
+        table {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .table th, .table td {
+            text-align: center;
+        }
+
+        .btn-sm {
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 <body layout:fragment="body">
 <!-- Navigation-->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container px-5">
-        <a class="navbar-brand" th:href="@{/home}">List Course</a>
+        <a class="navbar-brand" th:href="@{/home}">Category & Course</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -48,7 +62,7 @@
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link" th:href="@{/home}">Home</a></li>
                 <li class="nav-item"><a class="nav-link" th:href="@{/create_course}">Add course</a></li>
-                <li class="nav-item"><a class="nav-link" th:href="@{/categories}">Add new category</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/categories}">Add category</a></li>
                 <li sec:authorize="isAuthenticated()" class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" id="navbarDropdownPortfolio" href="#" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">Welcome</a>
@@ -63,66 +77,93 @@
 </nav>
 
 <!-- Main Section-->
-<section class="py-5 bg-light content"> <!-- Thêm lớp .content -->
+<section class="py-5 bg-light content">
     <div class="container mt-5">
-        <!-- Display Categories -->
-        <h3>Categories</h3>
-        <table class="table table-bordered">
-            <thead class="thead-dark">
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Action</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="category : ${categories}">
-                <td th:text="${category.id}"></td> <!-- Display category ID -->
-                <td th:text="${category.name}"></td> <!-- Display category name -->
-                <td style="white-space: nowrap">
-                    <a class="btn btn-primary btn-sm"
-                       th:href="@{/courses-by-category/{id}(id=${category.id})}">View Courses</a>
-                    <a class="btn btn-primary btn-sm"
-                       th:href="@{/edit_category(id=${category.id})}">Edit</a>
-                    <form th:action="@{/delete_category}" method="post" style="display: inline;">
-                        <input type="hidden" name="id" th:value="${category.id}" />
-                        <button class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+        <div class="row">
+            <!-- Categories Section -->
+            <div class="col-md-6">
+                <h3>Categories</h3>
+                <table class="table table-bordered">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th>Name</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Unique Categories from Web Service -->
+                    <tr th:each="category : ${categories}">
+                        <td th:text="${category.name}"></td> <!-- Display category name -->
+                        <td style="white-space: nowrap">
+                            <a class="btn btn-primary btn-sm"
+                               th:href="@{/courses-by-category/{id}(id=${category.id})}">View Courses</a>
+                            <a class="btn btn-primary btn-sm"
+                               th:href="@{/edit_category(id=${category.id})}">Edit</a>
+                            <form th:action="@{/delete_category}" method="post" style="display: inline;">
+                                <input type="hidden" name="id" th:value="${category.id}" />
+                                <button class="btn btn-danger btn-sm" type="submit" onclick="return confirm('Are you sure you want to delete this category?')">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <!-- Unique Moodle Categories -->
+                    <tr th:each="moodleCategory : ${moodleCategories}">
+                        <td th:text="${moodleCategory.name}"></td> <!-- Display Moodle category name -->
+                        <td style="white-space: nowrap">
+                            <a class="btn btn-primary btn-sm"
+                               th:href="@{/courses-by-category/{id}(id=${moodleCategory.id})}">View Courses</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <!-- Display Courses (Conditional) -->
-        <div class="mt-5" th:if="${courses != null}">
-            <h3>Courses</h3>
-            <table class="table table-bordered">
-                <thead class="thead-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Full Name</th>
-                    <th>Short Name</th>
-                    <th>Category</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="course : ${courses}">
-                    <td th:text="${course.id}"></td> <!-- Display course ID -->
-                    <td th:text="${course.fullname}"></td> <!-- Display course full name -->
-                    <td th:text="${course.shortname}"></td> <!-- Display course short name -->
-                    <td th:text="${course.category}"></td> <!-- Display course category -->
-                    <td style="white-space: nowrap">
-                        <a class="btn btn-primary btn-sm"
-                           th:href="@{/edit_course(id=${course.id})}">Edit</a>
-                        <form th:action="@{/delete_course}" method="post" style="display: inline;">
-                            <input type="hidden" name="id" th:value="${course.id}" />
-                            <button class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+            <!-- Courses Section -->
+            <div class="col-md-6">
+                <h3>Courses</h3>
+                <table class="table table-bordered">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Full Name</th>
+                        <th>Short Name</th>
+                        <th>Category</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Unique Courses from Web Service -->
+<!--                    <tr th:each="course : ${courses}">-->
+<!--                        <td th:text="${course.id}"></td> &lt;!&ndash; Display course ID &ndash;&gt;-->
+<!--                        <td th:text="${course.fullname}"></td> &lt;!&ndash; Display course full name &ndash;&gt;-->
+<!--                        <td th:text="${course.shortname}"></td> &lt;!&ndash; Display course short name &ndash;&gt;-->
+<!--                        <td th:text="${course.categoryName}"></td> &lt;!&ndash; Display course category name &ndash;&gt;-->
+<!--                        <td style="white-space: nowrap">-->
+<!--                            <a class="btn btn-primary btn-sm"-->
+<!--                               th:href="@{/edit_course(id=${course.id})}">Edit</a>-->
+<!--                            <form th:action="@{/delete_course}" method="post" style="display: inline;">-->
+<!--                                <input type="hidden" name="id" th:value="${course.id}" />-->
+<!--                                <button class="btn btn-danger btn-sm" type="submit" onclick="return confirm('Are you sure you want to delete this course?')">Delete</button>-->
+<!--                            </form>-->
+<!--                        </td>-->
+<!--                    </tr>-->
+                    <!-- Moodle Courses -->
+                    <tr th:each="moodleCourse : ${moodleCourses}">
+                        <td th:text="${moodleCourse.id}"></td> <!-- Hiển thị ID khóa học -->
+                        <td th:text="${moodleCourse.fullname}"></td> <!-- Hiển thị tên đầy đủ của khóa học -->
+                        <td th:text="${moodleCourse.shortname}"></td> <!-- Hiển thị tên ngắn của khóa học -->
+                        <td th:text="${moodleCourse.categoryName}"></td> <!-- Hiển thị tên danh mục của khóa học -->
+                        <td style="white-space: nowrap">
+                            <a class="btn btn-primary btn-sm"
+                               th:href="@{/edit_moodle_course(id=${moodleCourse.id})}">Edit</a>
+                            <form th:action="@{/delete_moodle_course}" method="post" style="display: inline;">
+                                <input type="hidden" name="id" th:value="${moodleCourse.id}" />
+                                <button class="btn btn-danger btn-sm" type="submit" onclick="return confirm('Are you sure you want to delete this Moodle course?')">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </section>
@@ -151,3 +192,4 @@
 <script src="js/scripts.js"></script>
 </body>
 </html>
+

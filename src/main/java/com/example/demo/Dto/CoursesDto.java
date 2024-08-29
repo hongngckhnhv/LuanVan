@@ -8,6 +8,8 @@ public class CoursesDto {
     private Integer category;
     private String description;
 
+    private String categoryName;
+
     public Integer getId() {
         return id;
     }
@@ -54,5 +56,13 @@ public class CoursesDto {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 }

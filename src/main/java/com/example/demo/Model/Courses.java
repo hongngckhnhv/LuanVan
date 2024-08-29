@@ -18,6 +18,7 @@ public class Courses {
     private String shortname;
     private Integer category;
     private String description;
+    private String categoryName;
 
 
 
@@ -68,5 +69,13 @@ public class Courses {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 }
