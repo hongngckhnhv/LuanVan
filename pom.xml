@@ -125,6 +125,19 @@
 			<version>5.2.3</version>
 		</dependency>
 
+		<!-- Thêm vào file pom.xml nếu bạn dùng Maven -->
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20210307</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
+
+
 
 
 		<!--		<dependency>-->

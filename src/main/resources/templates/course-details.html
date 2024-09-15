@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết khóa học</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <style>
+        .container-course-details {
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .header-row {
+            display: flex;
+            justify-content: center;
+            width: 80%;
+            margin: 20px auto;
+            gap: 50px;
+        }
+
+        .course-details {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 80%;
+            background-color: #f9f9f9;
+            margin: 0 auto;
+        }
+
+        .course-section {
+            margin-bottom: 15px;
+        }
+
+        .course-section-header {
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .course-section-header i {
+            transition: transform 0.3s ease;
+        }
+
+        .course-section-content {
+            display: none;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 5px;
+            background-color: #fff;
+        }
+
+        .open .course-section-content {
+            display: block;
+        }
+
+        .open .course-section-header i {
+            transform: rotate(180deg);
+        }
+
+        .course-header {
+            font-size: 25px;
+            font-weight: bold;
+            padding-left: 30px;
+            padding-top: 30px;
+            margin-bottom: 20px;
+        }
+
+        .header-item {
+            cursor: pointer;
+            padding: 10px;
+            font-size: 18px;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+
+        .header-item.active {
+            border-bottom: 2px solid #007bff;
+            font-weight: bold;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .course-details input[type="text"] {
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+            max-width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .course-details p {
+            margin-bottom: 10px;
+        }
+
+        /* Container cho tiêu đề phần danh sách thành viên */
+        .members-title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* Header cho thanh tìm kiếm và số lượng thành viên */
+        .members-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        /* Đếm số lượng thành viên */
+        .members-count {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        /* Thanh tìm kiếm */
+        .members-search {
+            position: relative;
+            width: 300px;
+        }
+
+        /* Input tìm kiếm */
+        .members-search input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            padding-left: 40px;
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Icon tìm kiếm */
+        .members-search i {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: #888;
+        }
+
+        /* Header cho bảng danh sách thành viên */
+        .members-table-header {
+            display: flex;
+            justify-content: space-between;
+            background-color: #f1f1f1;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        /* Dòng dữ liệu thành viên */
+        .members-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            align-items: center;
+        }
+
+        /* Các cột trong bảng */
+        .table-column {
+            flex: 2;
+        }
+
+        /* Cột "Vai trò" được thu nhỏ hơn */
+        .members-row .table-column:nth-child(2),
+        .members-table-header .table-column:nth-child(2) {
+            flex: 1;
+        }
+
+
+    </style>
+</head>
+<body id="page-top" layout:fragment="body">
+
+<div class="container-course-details">
+    <div class="course-header">Khóa học 1 - Nhóm 1 - GV A - HK1 - 2024</div>
+
+    <!-- Header row with 3 sections: Khóa học, Danh sách thành viên, Điểm số -->
+    <div class="header-row">
+        <div class="header-item active" onclick="showTab('course')">Khóa học</div>
+        <div class="header-item" onclick="showTab('members')">Danh sách thành viên</div>
+        <div class="header-item" onclick="showTab('scores')">Điểm số</div>
+    </div>
+
+    <!-- Course details section -->
+    <div id="course" class="tab-pane active">
+        <div class="course-details">
+            <div class="course-section" onclick="toggleSection(this)">
+                <div class="course-section-header">
+                    Chung <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="course-section-content">
+                    Nội dung chung về khóa học...
+                </div>
+            </div>
+
+            <div class="course-section" onclick="toggleSection(this)">
+                <div class="course-section-header">
+                    Tài liệu giảng dạy <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="course-section-content">
+                    Các tài liệu giảng dạy liên quan...
+                </div>
+            </div>
+
+            <div class="course-section" onclick="toggleSection(this)">
+                <div class="course-section-header">
+                    Topic... <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="course-section-content">
+                    Nội dung các topic...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Members section -->
+    <div id="members" class="tab-pane">
+        <div class="course-details">
+            <!-- Section Title -->
+            <div class="members-title">
+                Danh sách thành viên
+            </div>
+
+            <!-- Search bar and number of participants -->
+            <div class="members-header">
+                <p class="members-count">Tìm thấy 1 người tham gia</p>
+                <div class="members-search">
+                    <input type="text" placeholder="Tìm kiếm...">
+                    <i class="fas fa-search"></i>
+                </div>
+            </div>
+
+            <!-- Table header -->
+            <div class="members-table-header">
+                <div class="table-column">Họ và Tên</div>
+                <div class="table-column">Vai trò</div>
+                <div class="table-column">Lần cuối truy cập vào khóa học</div>
+            </div>
+
+            <!-- Member row -->
+            <div class="members-row">
+                <div class="table-column">Nguyễn Văn A B20111111</div>
+                <div class="table-column">Sinh viên</div>
+                <div class="table-column">1 năm 202 các ngày</div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Scores section -->
+    <div id="scores" class="tab-pane">
+        <div class="course-details">
+            <p>Điểm số...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleSection(section) {
+        section.classList.toggle('open');
+    }
+
+    function showTab(tabId) {
+        // Ẩn tất cả các tab
+        const tabs = document.querySelectorAll('.tab-pane');
+        tabs.forEach(function (tab) {
+            tab.classList.remove('active');
+        });
+
+        // Bỏ active trên tất cả các tab header
+        const headers = document.querySelectorAll('.header-item');
+        headers.forEach(function (header) {
+            header.classList.remove('active');
+        });
+
+        // Hiển thị tab được chọn
+        document.getElementById(tabId).classList.add('active');
+
+        // Tìm và đánh dấu tab header tương ứng
+        headers.forEach(function (header) {
+            if (header.getAttribute('onclick').includes(tabId)) {
+                header.classList.add('active');
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

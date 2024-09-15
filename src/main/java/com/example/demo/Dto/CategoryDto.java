@@ -6,6 +6,8 @@ public class CategoryDto {
 
     private Integer categoryId;
 
+    private Integer parentCategoryId;
+
 
     public Integer getId() {
         return id;
@@ -29,5 +31,13 @@ public class CategoryDto {
 
     public void setCategoryId(Integer categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public Integer getParentCategoryId() {
+        return parentCategoryId;
+    }
+
+    public void setParentCategoryId(Integer parentCategoryId) {
+        this.parentCategoryId = parentCategoryId;
     }
 }

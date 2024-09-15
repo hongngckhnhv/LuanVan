@@ -39,6 +39,13 @@
             <div class="col-lg-5 align-self-lg-center">
                 <div class="container">
                     <h2 class="header-title">Create New Course</h2>
+
+                    <!-- Thông báo lỗi tổng quát -->
+                    <div th:if="${errorMessage != null}" class="notification" th:text="${errorMessage}"></div>
+
+                    <!-- Thông báo thành công -->
+                    <div th:if="${successMessage != null}" class="notification-success" th:text="${successMessage}"></div>
+
                     <form method="post" action="/create_course" enctype="multipart/form-data" th:object="${coursesDto}">
                         <div class="row mb-3">
                             <label class="col-sm-4 col-form-label" for="fullname">Full Name</label>
@@ -60,11 +67,13 @@
                             <label class="col-sm-4 col-form-label" for="category">Category</label>
                             <div class="col-sm-8">
                                 <select class="form-select" th:field="${coursesDto.category}" id="category">
-                                    <!-- Loop through categories from model and create options -->
+                                    <!-- Loop qua danh sách category từ Moodle và tạo options -->
                                     <option th:each="category : ${categories}"
                                             th:value="${category.id}"
                                             th:text="${category.name}"></option>
                                 </select>
+
+
                                 <p th:if="${#fields.hasErrors('category')}" th:errorclass="text-danger" th:errors="${coursesDto.category}"></p>
                             </div>
                         </div>

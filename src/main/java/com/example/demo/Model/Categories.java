@@ -12,6 +12,8 @@ public class Categories {
 
     private Integer categoryId;
 
+    private Integer parentCategoryId;
+
     // Getter và Setter
     public Integer getId() {
         return id;
@@ -35,6 +37,14 @@ public class Categories {
 
     public void setCategoryId(Integer categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public Integer getParentCategoryId() {
+        return parentCategoryId;
+    }
+
+    public void setParentCategoryId(Integer parentCategoryId) {
+        this.parentCategoryId = parentCategoryId;
     }
 }
 

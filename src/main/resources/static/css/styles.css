@@ -11286,10 +11286,6 @@ textarea.form-control-lg {
     display: none !important;
   }
 }
-body,
-html {
-  height: 100%;
-}
 
 .feature {
   display: inline-flex;
@@ -11307,4 +11303,37 @@ html {
   background-position: center;
   background-repeat: no-repeat;
   min-height: 15rem;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+footer {
+  background-color: #1f5ca9;
+  color: white;
+  width: 100%;
+  position: relative;
+  bottom: 0;
+  left: 0;
+}
+
+.container {
+  flex-grow: 1;
+}
+
+footer {
+  background-color: #1f5ca9;
+  color: white;
+  text-align: center;
+  height: 100px;
+  padding: 10px;
+  position: sticky; /* Sticky footer */
+  bottom: 0;
+  width: 100%;
+  margin-top: auto; /* Đảm bảo footer dính cuối trang */
 }

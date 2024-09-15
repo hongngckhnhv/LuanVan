@@ -13,7 +13,6 @@
     <link th:href="@{/css/styles.css}" rel="stylesheet" />
     <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">E - Course</title>
     <style>
-        /* Đảm bảo body chiếm toàn bộ chiều cao trang */
         html, body {
             height: 100%;
             margin: 0;
@@ -21,23 +20,34 @@
             flex-direction: column;
         }
 
-        /* Nội dung chính của trang, cho phép nội dung tự giãn */
         .content {
             flex: 1;
         }
 
-        /* Chân trang */
         footer {
-            background-color: #343a40; /* Màu nền tối */
+            background-color: #343a40;
             color: white;
             padding: 20px 0;
             text-align: center;
         }
 
-        /* Table styles */
-        table {
-            width: 100%;
-            margin: 20px 0;
+        .category-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .category-item {
+            cursor: pointer;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            transition: background-color 0.3s ease;
+        }
+
+        .category-item:hover {
+            background-color: #e2e6ea;
         }
 
         .table th, .table td {
@@ -83,38 +93,12 @@
             <!-- Categories Section -->
             <div class="col-md-6">
                 <h3>Categories</h3>
-                <table class="table table-bordered">
-                    <thead class="thead-dark">
-                    <tr>
-                        <th>Name</th>
-                        <th>Action</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <!-- Unique Categories from Web Service -->
-                    <tr th:each="category : ${categories}">
-                        <td th:text="${category.name}"></td> <!-- Display category name -->
-                        <td style="white-space: nowrap">
-                            <a class="btn btn-primary btn-sm"
-                               th:href="@{/courses-by-category/{id}(id=${category.id})}">View Courses</a>
-                            <a class="btn btn-primary btn-sm"
-                               th:href="@{/edit_category(id=${category.id})}">Edit</a>
-                            <form th:action="@{/delete_category}" method="post" style="display: inline;">
-                                <input type="hidden" name="id" th:value="${category.id}" />
-                                <button class="btn btn-danger btn-sm" type="submit" onclick="return confirm('Are you sure you want to delete this category?')">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                    <!-- Unique Moodle Categories -->
-                    <tr th:each="moodleCategory : ${moodleCategories}">
-                        <td th:text="${moodleCategory.name}"></td> <!-- Display Moodle category name -->
-                        <td style="white-space: nowrap">
-                            <a class="btn btn-primary btn-sm"
-                               th:href="@{/courses-by-category/{id}(id=${moodleCategory.id})}">View Courses</a>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+                <ul class="category-list">
+                    <li th:each="category : ${categories}" class="category-item"
+                        onclick="showCourses([[${category.id}]])" th:text="${category.name}"></li>
+                    <li th:each="moodleCategory : ${moodleCategories}" class="category-item"
+                        onclick="showCourses([[${moodleCategory.id}]])" th:text="${moodleCategory.name}"></li>
+                </ul>
             </div>
 
             <!-- Courses Section -->
@@ -123,46 +107,31 @@
                 <table class="table table-bordered">
                     <thead class="thead-dark">
                     <tr>
-                        <th>ID</th>
                         <th>Full Name</th>
                         <th>Short Name</th>
                         <th>Category</th>
                         <th>Action</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    <!-- Unique Courses from Web Service -->
-<!--                    <tr th:each="course : ${courses}">-->
-<!--                        <td th:text="${course.id}"></td> &lt;!&ndash; Display course ID &ndash;&gt;-->
-<!--                        <td th:text="${course.fullname}"></td> &lt;!&ndash; Display course full name &ndash;&gt;-->
-<!--                        <td th:text="${course.shortname}"></td> &lt;!&ndash; Display course short name &ndash;&gt;-->
-<!--                        <td th:text="${course.categoryName}"></td> &lt;!&ndash; Display course category name &ndash;&gt;-->
-<!--                        <td style="white-space: nowrap">-->
-<!--                            <a class="btn btn-primary btn-sm"-->
-<!--                               th:href="@{/edit_course(id=${course.id})}">Edit</a>-->
-<!--                            <form th:action="@{/delete_course}" method="post" style="display: inline;">-->
-<!--                                <input type="hidden" name="id" th:value="${course.id}" />-->
-<!--                                <button class="btn btn-danger btn-sm" type="submit" onclick="return confirm('Are you sure you want to delete this course?')">Delete</button>-->
-<!--                            </form>-->
-<!--                        </td>-->
-<!--                    </tr>-->
-                    <!-- Moodle Courses -->
-                    <tr th:each="moodleCourse : ${moodleCourses}">
-                        <td th:text="${moodleCourse.id}"></td> <!-- Hiển thị ID khóa học -->
-                        <td th:text="${moodleCourse.fullname}"></td> <!-- Hiển thị tên đầy đủ của khóa học -->
-                        <td th:text="${moodleCourse.shortname}"></td> <!-- Hiển thị tên ngắn của khóa học -->
-                        <td th:text="${moodleCourse.categoryName}"></td> <!-- Hiển thị tên danh mục của khóa học -->
+                    <tbody id="courseList">
+                    <tr th:each="moodleCourse : ${moodleCourses}" th:data-category-id="${moodleCourse.category}">
+                        <td th:text="${moodleCourse.fullname}"></td>
+                        <td th:text="${moodleCourse.shortname}"></td>
+                        <td th:text="${moodleCourse.categoryName}"></td>
                         <td style="white-space: nowrap">
-                            <a class="btn btn-primary btn-sm"
-                               th:href="@{/edit_moodle_course(id=${moodleCourse.id})}">Edit</a>
-                            <form th:action="@{/delete_moodle_course}" method="post" style="display: inline;">
+                            <a class="btn btn-primary btn-sm" th:href="@{/edit_moodle_course(id=${moodleCourse.id})}">Edit</a>
+                            <form th:action="@{/delete_moodle_course}" method="post" class="delete-form" style="display: inline;">
+                                <input type="hidden" name="webCourseId" th:value="${moodleCourse.webCourseId}" />
                                 <input type="hidden" name="id" th:value="${moodleCourse.id}" />
-                                <button class="btn btn-danger btn-sm" type="submit" onclick="return confirm('Are you sure you want to delete this Moodle course?')">Delete</button>
+                                <button class="btn btn-danger btn-sm" type="button" onclick="deleteCourse(this)">Delete</button>
                             </form>
+
                         </td>
                     </tr>
                     </tbody>
+
                 </table>
+
             </div>
         </div>
     </div>
@@ -192,4 +161,48 @@
 <script src="js/scripts.js"></script>
 </body>
 </html>
+
+<script>
+    function showCourses(categoryId) {
+        // Get all the course rows
+        const courseRows = document.querySelectorAll("#courseList tr");
+
+        // Loop through each course and check the category ID
+        courseRows.forEach(row => {
+            const courseCategoryId = row.getAttribute("data-category-id");
+
+            // If the course's category matches the selected category, show it, otherwise hide it
+            if (courseCategoryId == categoryId) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+
+    function deleteCourse(button) {
+        const row = button.closest('tr');
+        const webCourseId = row.querySelector('input[name="webCourseId"]').value;
+        const id = row.querySelector('input[name="id"]').value;
+
+        if (confirm('Are you sure you want to delete this Moodle course?')) {
+            const formData = new FormData();
+            formData.append('webCourseId', webCourseId);
+            formData.append('id', id);
+
+            fetch('/delete_moodle_course', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.text())
+                .then(data => {
+                    row.style.display = 'none';  // Ẩn khóa học khỏi danh sách
+                    alert('Course deleted successfully.');
+                }).catch(error => {
+                console.error('Error:', error);
+                alert('Failed to delete course.');
+            });
+        }
+    }
+
+</script>
 
