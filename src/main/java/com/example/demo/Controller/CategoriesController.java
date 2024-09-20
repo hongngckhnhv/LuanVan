@@ -7,6 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
@@ -33,6 +34,12 @@ public class CategoriesController {
     public CategoriesController(CategoriesRepo repo) {
         this.repo = repo;
     }
+
+    @Value("${moodle.token}")
+    private String token;
+
+    @Value("${moodle.domain}")
+    private String domainName;
 
     @GetMapping("/categories")
     public String showCreateCategories(Model model) {
@@ -84,8 +91,6 @@ public class CategoriesController {
     }
 
     private Categories fetchCategoryFromMoodle(Integer categoryId) {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e";
-        String domainName = "http://localhost/demo.hoangngockhanh.vn";
         String functionName = "core_course_get_categories";
 
         JSONObject jsonObject = new JSONObject();
@@ -176,8 +181,6 @@ public class CategoriesController {
     }
 
     private String createMoodleCategory(CategoryDto categoryDto) {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e";
-        String domainName = "http://localhost/demo.hoangngockhanh.vn";
         String functionName = "core_course_create_categories";
 
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
@@ -223,8 +226,6 @@ public class CategoriesController {
     }
 
     private List<Categories> fetchCategoriesFromMoodle() {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e";
-        String domainName = "http://localhost/demo.hoangngockhanh.vn";
         String functionName = "core_course_get_categories";
 
         // Chuẩn bị các tham số và request

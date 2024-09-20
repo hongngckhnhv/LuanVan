@@ -37,7 +37,7 @@ public class StudentCourseController {
         // Tên của hàm API trong Moodle để lấy danh sách sinh viên
         String getStudentsFunction = "core_user_get_users";
 
-        // Tên của hàm API trong Moodle để lấy danh sách khóa học của sinh viên
+        // Tên của hàm API trong Moodle để lấy danh sách khóa học  của sinh viên
         String getUserCoursesFunction = "core_enrol_get_users_courses";
 
         // Gửi yêu cầu API để lấy danh sách sinh viên từ Moodle dựa trên firstname

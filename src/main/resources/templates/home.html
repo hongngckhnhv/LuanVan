@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
 
     <style>
-
         html, body {
             height: 100%; /* Đảm bảo chiều cao 100% cho toàn bộ trang */
             margin: 0;
@@ -18,7 +17,6 @@
             display: flex;
             flex-direction: column;
         }
-
 
         .container-form {
             width: 60%;
@@ -66,16 +64,32 @@
         /* Ẩn danh sách course ban đầu */
         .course-list {
             display: none;
-            margin-left: 30px; /* Thụt lề cho course */
+            margin-left: 50px; /* Thụt lề cho course */
             list-style-type: none; /* Bỏ dấu chấm */
             padding-left: 0; /* Bỏ thụt lề mặc định */
         }
-
 
         /* Hiển thị course khi mở category */
         .expanded + .course-list {
             display: block;
         }
+
+        /* Căn chỉnh icon với tên danh mục */
+        .category-item i {
+            margin-right: 8px; /* Khoảng cách giữa icon và tên */
+        }
+
+        /* Giữ nguyên thụt lề của danh mục con */
+        .course-list .category-item {
+            padding-left: 40px;
+        }
+
+        /* Thụt lề cho khóa học của danh mục con */
+        /* Thụt lề cho các khóa học thuộc danh mục con */
+        .course-list .course-list {
+            margin-left: 70px; /* Tăng thêm thụt lề cho khóa học trong danh mục con */
+        }
+
 
     </style>
 </head>
@@ -95,23 +109,51 @@
 <div class="container-form">
     <h2>Categories</h2>
     <ul class="no-dots">
-        <li th:each="category : ${moodleCategories}">
+        <!-- Chỉ lặp qua các danh mục cha (parent == 0) -->
+        <li th:each="category : ${moodleCategories}" th:if="${category.categoryId == 0}">
+            <!-- Hiển thị danh mục cha với icon -->
             <div class="category-item" onclick="toggleCourses(this)">
+                <i class="fas fa-folder"></i> <!-- Icon thư mục -->
                 <span th:text="${category.name}">Category Name</span>
-                <i class="fas fa-chevron-right"></i> <!-- Icon Font Awesome -->
+                <i class="fas fa-chevron-right"></i> <!-- Icon mũi tên -->
             </div>
-            <ul class="course-list">
-                <li th:each="course : ${moodleCourses}">
-                    <span th:if="${course.category == category.id}" th:text="${course.fullname}">Course Name</span>
+
+            <!-- Hiển thị danh mục con lồng bên trong danh mục cha -->
+            <ul class="no-dots course-list">
+                <li th:each="subCategory : ${moodleCategories}" th:if="${subCategory.categoryId == category.id}">
+                    <!-- Hiển thị danh mục con với icon -->
+                    <div class="category-item" onclick="toggleCourses(this)">
+                        <i class="fas fa-folder"></i> <!-- Icon thư mục -->
+                        <span th:text="${subCategory.name}">Subcategory Name</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+
+                    <!-- Hiển thị khóa học trong danh mục con -->
+                    <ul class="no-dots course-list">
+                        <li th:each="course : ${moodleCourses}" th:if="${course.category == subCategory.id}">
+                            <span th:text="${course.fullname}">Course Name</span>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Hiển thị các khóa học thuộc danh mục cha -->
+                <li th:each="course : ${moodleCourses}" th:if="${course.category == category.id}">
+                    <span th:text="${course.fullname}">Course Name</span>
                 </li>
             </ul>
         </li>
     </ul>
 </div>
 
+
+
 <script>
     function toggleCourses(element) {
         element.classList.toggle('expanded');
+        let courseList = element.nextElementSibling;
+        if (courseList) {
+            courseList.style.display = courseList.style.display === 'none' || courseList.style.display === '' ? 'block' : 'none';
+        }
     }
 </script>
 </body>

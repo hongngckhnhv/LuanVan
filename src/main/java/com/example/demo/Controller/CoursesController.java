@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -27,6 +28,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 public class CoursesController {
@@ -39,15 +41,24 @@ public class CoursesController {
         this.categoryRepo = categoryRepo;
     }
 
+    @Value("${moodle.token}")
+    private String token;
+
+    @Value("${moodle.domain}")
+    private String domainName;
+
     @GetMapping("/layout_course")
     public String showCourseList(Model model) {
         // Lấy dữ liệu khóa học từ Moodle
         List<CoursesDto> moodleCourses = fetchCoursesFromMoodle();
-        model.addAttribute("moodleCourses", moodleCourses);
+
+        // Đồng bộ khóa học từ Moodle
+        synchronizeCourses(moodleCourses);
 
         // Lấy dữ liệu khóa học từ cơ sở dữ liệu
         List<Courses> courses = repo.findAll();
         model.addAttribute("courses", courses);
+        model.addAttribute("moodleCourses", moodleCourses);
 
         // Lấy danh mục từ Moodle và thêm vào mô hình
         List<CategoryDto> moodleCategories = fetchCategoriesFromMoodle();
@@ -56,9 +67,62 @@ public class CoursesController {
         return "layout_course";
     }
 
+    private void synchronizeCourses(List<CoursesDto> moodleCourses) {
+        System.out.println("Starting course synchronization...");
+
+        // Lấy danh sách khóa học hiện có từ cơ sở dữ liệu
+        List<Courses> existingCourses = repo.findAll();
+        Set<Integer> existingCourseIds = existingCourses.stream()
+                .map(Courses::getWebCourseId)
+                .collect(Collectors.toSet());
+
+        for (CoursesDto moodleCourse : moodleCourses) {
+            System.out.println("Processing Moodle course: " + moodleCourse.getFullname());
+
+            if (!existingCourseIds.contains(moodleCourse.getId())) {
+                // Nếu khóa học không tồn tại, thêm vào cơ sở dữ liệu
+                Courses newCourse = new Courses();
+                newCourse.setFullname(moodleCourse.getFullname());
+                newCourse.setShortname(moodleCourse.getShortname());
+                newCourse.setDescription(moodleCourse.getDescription());
+                newCourse.setCategory(moodleCourse.getCategory());
+                newCourse.setWebCourseId(moodleCourse.getId());
+                newCourse.setCategoryName(moodleCourse.getCategoryName());
+
+                repo.save(newCourse);
+                System.out.println("Added new course: " + newCourse.getFullname());
+            } else {
+                // Nếu khóa học đã tồn tại, kiểm tra và cập nhật thông tin nếu cần
+                Courses existingCourse = existingCourses.stream()
+                        .filter(course -> course.getWebCourseId().equals(moodleCourse.getId()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (existingCourse != null) {
+                    // Cập nhật thông tin khóa học nếu có thay đổi
+                    existingCourse.setFullname(moodleCourse.getFullname());
+                    existingCourse.setShortname(moodleCourse.getShortname());
+                    existingCourse.setDescription(moodleCourse.getDescription());
+                    existingCourse.setCategory(moodleCourse.getCategory());
+                    existingCourse.setCategoryName(moodleCourse.getCategoryName());
+
+                    repo.save(existingCourse);
+                    System.out.println("Updated course: " + existingCourse.getFullname());
+                }
+            }
+        }
+
+        System.out.println("Course synchronization completed.");
+
+        // Kiểm tra các khóa học hiện có trong cơ sở dữ liệu sau khi đồng bộ
+        List<Courses> updatedCourses = repo.findAll();
+        System.out.println("Courses in database after synchronization: " + updatedCourses);
+    }
+
+
+
+
     private List<CoursesDto> fetchCoursesFromMoodle() {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e"; // Thay thế bằng token của bạn
-        String domainName = "http://localhost/demo.hoangngockhanh.vn"; // Thay thế bằng domain Moodle của bạn
         String functionName = "core_course_get_courses";
 
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
@@ -74,6 +138,7 @@ public class CoursesController {
         RestTemplate restTemplate = new RestTemplate();
         String response = restTemplate.postForObject(serverUrl, request, String.class);
 
+        System.out.println(serverUrl);
         ObjectMapper mapper = new ObjectMapper();
         List<CoursesDto> courseList = new ArrayList<>();
         try {
@@ -106,8 +171,6 @@ public class CoursesController {
     }
 
     private String fetchCategoryNameFromMoodle(int categoryId) {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e"; // Thay thế bằng token của bạn
-        String domainName = "http://localhost/demo.hoangngockhanh.vn"; // Thay thế bằng domain Moodle của bạn
         String functionName = "core_course_get_categories";
 
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
@@ -142,8 +205,6 @@ public class CoursesController {
     }
 
     private List<CategoryDto> fetchCategoriesFromMoodle() {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e"; // Thay thế bằng token của bạn
-        String domainName = "http://localhost/demo.hoangngockhanh.vn"; // Thay thế bằng domain Moodle của bạn
         String functionName = "core_course_get_categories";
 
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
@@ -230,9 +291,6 @@ public class CoursesController {
 
 
     private String createMoodleCourse(CoursesDto coursesDto) {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e"; // Replace with your token
-        String domainName = "http://localhost/demo.hoangngockhanh.vn"; // Replace with your Moodle domain
-
         // Kiểm tra nếu categoryId được chọn từ Moodle thì sử dụng trực tiếp categoryId đó
         Integer moodleCategoryId = coursesDto.getCategory(); // Category lấy từ Moodle có thể truyền trực tiếp
 
@@ -328,8 +386,6 @@ public class CoursesController {
     }
 
     private boolean updateMoodleCourse(CoursesDto coursesDto) {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e"; // Thay thế bằng token của bạn
-        String domainName = "http://localhost/demo.hoangngockhanh.vn"; // Thay thế bằng domain Moodle của bạn
 
         String functionName = "core_course_update_courses";
 
@@ -421,8 +477,6 @@ public class CoursesController {
     }
 
     private boolean deleteMoodleCourse(Integer moodleCourseId) {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e"; // Thay thế bằng token của bạn
-        String domainName = "http://localhost/demo.hoangngockhanh.vn"; // Thay thế bằng domain Moodle của bạn
 
         String functionName = "core_course_delete_courses";
 
@@ -508,8 +562,7 @@ public class CoursesController {
     }
 
     private boolean deleteCourseFromMoodle(int courseId) {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e"; // Thay thế bằng token của bạn
-        String domainName = "http://localhost/demo.hoangngockhanh.vn"; // Thay thế bằng domain Moodle của bạn
+
         String functionName = "core_course_delete_courses";
 
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();

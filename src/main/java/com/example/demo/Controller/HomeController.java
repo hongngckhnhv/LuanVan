@@ -8,15 +8,15 @@ import com.example.demo.Repository.CourseRepo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.ui.Model;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
@@ -25,8 +25,15 @@ import java.util.List;
 
 @Controller
 public class HomeController {
+
     private final CourseRepo repo;
     private final CategoriesRepo categoryRepo;
+
+    @Value("${moodle.token}")
+    private String token;
+
+    @Value("${moodle.domain}")
+    private String domainName;
 
     @Autowired
     public HomeController(CourseRepo repo, CategoriesRepo categoryRepo) {
@@ -52,22 +59,8 @@ public class HomeController {
     }
 
     private List<CoursesDto> fetchCoursesFromMoodle() {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e"; // Thay thế bằng token của bạn
-        String domainName = "http://localhost/demo.hoangngockhanh.vn"; // Thay thế bằng domain Moodle của bạn
         String functionName = "core_course_get_courses";
-
-        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-        parameters.add("moodlewsrestformat", "json");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(parameters, headers);
-
-        String serverUrl = domainName + "/webservice/rest/server.php" + "?wstoken=" + token + "&wsfunction=" + functionName;
-
-        RestTemplate restTemplate = new RestTemplate();
-        String response = restTemplate.postForObject(serverUrl, request, String.class);
+        String response = sendMoodleRequest(functionName, new LinkedMultiValueMap<>());
 
         ObjectMapper mapper = new ObjectMapper();
         List<CoursesDto> courseList = new ArrayList<>();
@@ -86,7 +79,7 @@ public class HomeController {
                         course.setCategory(categoryId);
 
                         // Lấy tên danh mục từ Moodle
-                        String categoryName = fetchCategoryNameFromMoodle(categoryId);
+                        String categoryName = getCategoryNameFromMoodle(categoryId);
                         course.setCategoryName(categoryName);
 
                         courseList.add(course);
@@ -100,59 +93,18 @@ public class HomeController {
         return courseList;
     }
 
-    private String fetchCategoryNameFromMoodle(int categoryId) {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e"; // Thay thế bằng token của bạn
-        String domainName = "http://localhost/demo.hoangngockhanh.vn"; // Thay thế bằng domain Moodle của bạn
-        String functionName = "core_course_get_categories";
-
-        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-        parameters.add("moodlewsrestformat", "json");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(parameters, headers);
-
-        String serverUrl = domainName + "/webservice/rest/server.php" + "?wstoken=" + token + "&wsfunction=" + functionName;
-
-        RestTemplate restTemplate = new RestTemplate();
-        String response = restTemplate.postForObject(serverUrl, request, String.class);
-
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            JsonNode root = mapper.readTree(response);
-            if (root.isArray()) {
-                for (JsonNode categoryNode : root) {
-                    int id = categoryNode.path("id").asInt();
-                    if (id == categoryId) {
-                        return categoryNode.path("name").asText();
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return "Unknown Category";
+    private String getCategoryNameFromMoodle(int categoryId) {
+        List<CategoryDto> categories = fetchCategoriesFromMoodle();
+        return categories.stream()
+                .filter(category -> category.getId() == categoryId)
+                .findFirst()
+                .map(CategoryDto::getName)
+                .orElse("Unknown Category");
     }
 
     private List<CategoryDto> fetchCategoriesFromMoodle() {
-        String token = "2f8b6d0d241565fd8731dcabcf342e3e"; // Thay thế bằng token của bạn
-        String domainName = "http://localhost/demo.hoangngockhanh.vn"; // Thay thế bằng domain Moodle của bạn
         String functionName = "core_course_get_categories";
-
-        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-        parameters.add("moodlewsrestformat", "json");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(parameters, headers);
-
-        String serverUrl = domainName + "/webservice/rest/server.php" + "?wstoken=" + token + "&wsfunction=" + functionName;
-
-        RestTemplate restTemplate = new RestTemplate();
-        String response = restTemplate.postForObject(serverUrl, request, String.class);
+        String response = sendMoodleRequest(functionName, new LinkedMultiValueMap<>());
 
         ObjectMapper mapper = new ObjectMapper();
         List<CategoryDto> categoryList = new ArrayList<>();
@@ -172,5 +124,19 @@ public class HomeController {
         }
 
         return categoryList;
+    }
+
+    private String sendMoodleRequest(String functionName, MultiValueMap<String, String> parameters) {
+        parameters.add("moodlewsrestformat", "json");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(parameters, headers);
+
+        String serverUrl = domainName + "/webservice/rest/server.php" + "?wstoken=" + token + "&wsfunction=" + functionName;
+
+        RestTemplate restTemplate = new RestTemplate();
+        return restTemplate.postForObject(serverUrl, request, String.class);
     }
 }
