@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
+<html lang="en" xmlns:th="http://thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -104,6 +103,31 @@
         .container {
             flex: 1;
         }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination a {
+            margin: 0 5px;
+            padding: 10px 15px;
+            text-decoration: none;
+            border: 1px solid #ccc;
+            color: #333;
+            border-radius: 4px;
+        }
+
+        .pagination a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .pagination a.active {
+            background-color: #007bff;
+            color: white;
+        }
     </style>
 </head>
 <body id="page-top" layout:fragment="body">
@@ -114,56 +138,48 @@
     <div class="filters">
         <div>
             <label for="category">Courses:</label>
-            <select id="category">
-                <option value="all">ALL</option>
-                <!-- Các option khác -->
+            <select id="category" name="category" th:field="*{category}">
+                <option value="all" th:value="all" th:text="#{all}">ALL</option>
+                <!-- Các option khác được tải động từ backend -->
+                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
             </select>
         </div>
         <div>
-            <input type="text" placeholder="Tìm kiếm..."/>
+            <input type="text" placeholder="Tìm kiếm..." th:value="${searchTerm}"/>
             <i class="fas fa-search"></i>
         </div>
         <div>
             <label for="open">Mở:</label>
-            <select id="open">
-                <option value="4">4</option>
-                <!-- Các option khác -->
+            <select id="open" name="pageSize" th:field="*{pageSize}">
+                <option value="5" th:value="5" th:text="#{five}">5</option>
+                <option value="10" th:value="10" th:text="#{ten}">10</option>
+                <option value="20" th:value="20" th:text="#{twenty}">20</option>
             </select>
         </div>
     </div>
+
+    <!-- Courses -->
     <div class="courses">
-        <div class="course-box">
-            <div class="course-header"></div>
+        <div th:each="course : ${courses}" class="course-box">
+            <div class="course-header">
+                <span th:text="${course.name}">Tên khóa học</span>
+            </div>
             <div class="course-info">
-                <a href="/course-details/{courseId}">Tên học phần (Mã HP) - Tên nhóm - Tên GV - HK - Năm học</a>
+                <a th:href="@{/course-details/{courseId}(courseId=${course.id})}"
+                   th:text="${course.name} + ' - ' + ${course.teacher}">Tên học phần (Mã HP) - Tên GV</a>
             </div>
         </div>
-        <!-- Các khóa học khác -->
+    </div>
 
-        <div class="course-box">
-            <div class="course-header"></div>
-            <div class="course-info">
-                <a href="/course-details/{courseId}">Tên học phần (Mã HP) - Tên nhóm - Tên GV - HK - Năm học</a>
-            </div>
-        </div>
-
-        <div class="course-box">
-            <div class="course-header"></div>
-            <div class="course-info">
-                <a href="/course-details/{courseId}">Tên học phần (Mã HP) - Tên nhóm - Tên GV - HK - Năm học</a>
-            </div>
-        </div>
-
-        <div class="course-box">
-            <div class="course-header"></div>
-            <div class="course-info">
-                <a href="/course-details/{courseId}">Tên học phần (Mã HP) - Tên nhóm - Tên GV - HK - Năm học</a>
-            </div>
-        </div>
-
+    <!-- Pagination -->
+    <div class="pagination">
+        <a th:if="${pageNumber > 1}" th:href="@{(page=${pageNumber - 1}, size=${pageSize})}">&laquo; Trước</a>
+        <a th:each="i : ${#numbers.sequence(1, totalPages)}"
+           th:classappend="${i == pageNumber} ? 'active'"
+           th:href="@{(page=${i}, size=${pageSize})}" th:text="${i}">1</a>
+        <a th:if="${pageNumber < totalPages}" th:href="@{(page=${pageNumber + 1}, size=${pageSize})}">Sau &raquo;</a>
     </div>
 
 </div>
-
 </body>
 </html>

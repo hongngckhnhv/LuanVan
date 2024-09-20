@@ -76,6 +76,11 @@ public class CoursesController {
                 .map(Courses::getWebCourseId)
                 .collect(Collectors.toSet());
 
+        // Lưu trữ ID khóa học từ Moodle
+        Set<Integer> moodleCourseIds = moodleCourses.stream()
+                .map(CoursesDto::getId)
+                .collect(Collectors.toSet());
+
         for (CoursesDto moodleCourse : moodleCourses) {
             System.out.println("Processing Moodle course: " + moodleCourse.getFullname());
 
@@ -112,15 +117,20 @@ public class CoursesController {
             }
         }
 
+        // Xóa các khóa học không còn tồn tại trên Moodle
+        for (Courses existingCourse : existingCourses) {
+            if (!moodleCourseIds.contains(existingCourse.getWebCourseId())) {
+                repo.delete(existingCourse);
+                System.out.println("Deleted course: " + existingCourse.getFullname());
+            }
+        }
+
         System.out.println("Course synchronization completed.");
 
         // Kiểm tra các khóa học hiện có trong cơ sở dữ liệu sau khi đồng bộ
         List<Courses> updatedCourses = repo.findAll();
         System.out.println("Courses in database after synchronization: " + updatedCourses);
     }
-
-
-
 
     private List<CoursesDto> fetchCoursesFromMoodle() {
         String functionName = "core_course_get_courses";
@@ -354,7 +364,6 @@ public class CoursesController {
         }
     }
 
-
     @PostMapping("/edit_course")
     public String editCourse(@Valid @ModelAttribute CoursesDto coursesDto, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
@@ -426,106 +435,6 @@ public class CoursesController {
             return false;
         }
     }
-
-    // Xóa khóa học trên webservice -> xóa luôn trên moodle
-
-    @PostMapping("/delete_course")
-    public String deleteCourse(@RequestParam("id") Integer courseId, Model model) {
-        // Tìm khóa học trong cơ sở dữ liệu theo ID
-        Optional<Courses> courseOpt = repo.findById(courseId);
-        if (courseOpt.isPresent()) {
-            Courses course = courseOpt.get();
-
-            // Lấy ID khóa học trên Moodle
-            Integer moodleCourseId = course.getWebCourseId();
-
-            // Kiểm tra xem ID khóa học trên Moodle có tồn tại hay không
-            if (moodleCourseId != null) {
-                // Gọi hàm để xóa khóa học trên Moodle
-                boolean moodleDeleted = deleteMoodleCourse(moodleCourseId);
-
-                if (moodleDeleted) {
-                    // Nếu xóa thành công trên Moodle, tiếp tục xóa khỏi cơ sở dữ liệu web
-                    try {
-                        repo.deleteById(courseId);
-                        repo.flush(); // Đảm bảo rằng thay đổi được commit ngay lập tức
-                        System.out.println("Course deleted from web database: " + course.getFullname());
-
-                        // Cập nhật danh sách khóa học sau khi xóa thành công
-                        List<Courses> updatedCourses = repo.findAll();
-                        model.addAttribute("courses", updatedCourses);
-
-                    } catch (Exception e) {
-                        System.out.println("Failed to delete course from web database: " + course.getFullname());
-                        e.printStackTrace(); // In ra chi tiết lỗi để dễ dàng debug
-                        model.addAttribute("errorMessage", "Failed to delete the course from the web database. Please try again.");
-                    }
-                } else {
-                    // Xử lý lỗi nếu việc xóa trên Moodle không thành công
-                    System.out.println("Failed to delete course from Moodle: " + course.getFullname());
-                    model.addAttribute("errorMessage", "Failed to delete the course on Moodle. Please try again.");
-                }
-            } else {
-                System.out.println("Moodle Course ID is null for course: " + course.getFullname());
-                model.addAttribute("errorMessage", "Moodle Course ID is missing. Cannot delete the course on Moodle.");
-            }
-        } else {
-            System.out.println("Course not found in the database with ID: " + courseId);
-            model.addAttribute("errorMessage", "Course not found in the database. Please try again.");
-        }
-        return "redirect:/layout_course"; // Trả về danh sách khóa học sau khi xóa
-    }
-
-    private boolean deleteMoodleCourse(Integer moodleCourseId) {
-
-        String functionName = "core_course_delete_courses";
-
-        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-        parameters.add("courseids[0]", String.valueOf(moodleCourseId));
-        parameters.add("moodlewsrestformat", "json");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(parameters, headers);
-
-        String serverUrl = domainName + "/webservice/rest/server.php" + "?wstoken=" + token + "&wsfunction=" + functionName;
-
-        RestTemplate restTemplate = new RestTemplate();
-        String response = restTemplate.postForObject(serverUrl, request, String.class);
-
-        System.out.println("Moodle Response: " + response);
-
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode rootNode = mapper.readTree(response);
-
-            // Kiểm tra xem phản hồi có chứa cảnh báo không
-            if (rootNode.has("warnings")) {
-                JsonNode warnings = rootNode.get("warnings");
-                if (warnings.size() == 0) {
-                    // Không có cảnh báo nào, tức là thành công
-                    return true;
-                } else {
-                    for (JsonNode warning : warnings) {
-                        System.out.println("Warning Item: " + warning.get("item").asText());
-                        System.out.println("Warning Item ID: " + warning.get("itemid").asInt());
-                        System.out.println("Warning Code: " + warning.get("warningcode").asText());
-                        System.out.println("Warning Message: " + warning.get("message").asText());
-                    }
-                    return false; // Có cảnh báo, coi như không thành công
-                }
-            } else {
-                System.out.println("Unexpected response structure from Moodle: " + response);
-                return false; // Phản hồi không như mong đợi
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
 
     @PostMapping("/delete_moodle_course")
     public String deleteMoodleCourse(@RequestParam("id") int courseId, RedirectAttributes redirectAttributes) {
