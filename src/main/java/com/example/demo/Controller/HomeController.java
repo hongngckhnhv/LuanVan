@@ -51,12 +51,13 @@ public class HomeController {
         List<Courses> courses = repo.findAll();
         model.addAttribute("courses", courses);
 
-        // Lấy danh mục từ Moodle và thêm vào mô hình
-        List<CategoryDto> moodleCategories = fetchCategoriesFromMoodle();
+        // Lấy danh mục từ Moodle và thêm vào mô hình với số lượng khóa học
+        List<CategoryDto> moodleCategories = fetchCategoriesFromMoodleWithCourseCount(); // Call this method
         model.addAttribute("moodleCategories", moodleCategories);
 
         return "home"; // Tên của trang HTML
     }
+
 
     private List<CoursesDto> fetchCoursesFromMoodle() {
         String functionName = "core_course_get_courses";
@@ -92,6 +93,43 @@ public class HomeController {
 
         return courseList;
     }
+
+    private List<CategoryDto> fetchCategoriesFromMoodleWithCourseCount() {
+        List<CategoryDto> categories = fetchCategoriesFromMoodle();
+        List<CoursesDto> courses = fetchCoursesFromMoodle();
+
+        // Debugging: Check the number of courses and categories fetched
+//        System.out.println("Fetched Categories: " + categories.size());
+//        System.out.println("Fetched Courses: " + courses.size());
+
+        // Đếm số khóa học trong mỗi danh mục
+        for (CategoryDto category : categories) {
+            long courseCount = courses.stream()
+                    .filter(course -> course.getCategory() == category.getId())
+                    .count();
+            category.setCourseCount((int) courseCount); // Set the course count for each category
+
+            // Debugging: Print course count for each category
+          //  System.out.println("Category ID: " + category.getId() + ", Course Count: " + courseCount);
+        }
+
+        // Tính số lượng khóa học cho danh mục cha dựa vào danh mục con
+        for (CategoryDto parentCategory : categories) {
+            if (parentCategory.getCategoryId() == 0) { // chỉ tính cho danh mục cha
+                int totalCourses = categories.stream()
+                        .filter(subCategory -> subCategory.getCategoryId() == parentCategory.getId())
+                        .mapToInt(subCategory -> subCategory.getCourseCount())
+                        .sum();
+                parentCategory.setCourseCount(totalCourses); // Cập nhật số khóa học cho danh mục cha
+            }
+        }
+
+        return categories;
+    }
+
+
+
+
 
     private String getCategoryNameFromMoodle(int categoryId) {
         List<CategoryDto> categories = fetchCategoriesFromMoodle();

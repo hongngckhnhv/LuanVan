@@ -6,12 +6,11 @@
 <head>
     <meta charset="utf-8"/>
     <link layout:href="@{/css/styles.css}" rel="stylesheet"/>
-    <!-- Add Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
 
     <style>
         html, body {
-            height: 100%; /* Đảm bảo chiều cao 100% cho toàn bộ trang */
+            height: 100%;
             margin: 0;
             padding: 0;
             display: flex;
@@ -19,78 +18,86 @@
         }
 
         .container-form {
-            width: 60%;
+            width: 100%;
             margin: 0 auto;
             padding: 20px;
-            border: 1px solid #ddd;
             border-radius: 8px;
             background-color: #f9f9f9;
-            max-height: 600px; /* Chiều cao cố định */
-            overflow-y: auto; /* Kích hoạt cuộn khi vượt quá chiều cao */
-            overflow-x: hidden; /* Vô hiệu hóa cuộn ngang nếu có */
+            max-height: 600px;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
-        /* Bỏ dấu chấm */
         ul.no-dots {
             list-style-type: none;
             padding-left: 0;
             margin: 0;
         }
 
-        /* Khoảng cách giữa các mục */
-        li {
-            margin-bottom: 5px;
-        }
-
-        /* Căn chỉnh icon và category gần nhau */
         .category-item {
             display: flex;
+            justify-content: space-between;
             align-items: center;
+            padding: 15px 20px;
             cursor: pointer;
-            padding-left: 20px; /* Thụt lề */
+            border-bottom: 1px solid #ddd;
+            background-color: white;
+            transition: background-color 0.3s;
         }
 
-        /* Icon chevron (mũi tên) */
-        .fa-chevron-right {
-            margin-left: 8px; /* Giảm khoảng cách giữa icon và text */
-            transition: transform 0.2s ease; /* Thêm animation cho việc xoay */
+        .category-item:hover {
+            background-color: #f0f0f0;
         }
 
-        /* Khi mở category, xoay icon */
-        .expanded .fa-chevron-right {
-            transform: rotate(90deg);
-        }
-
-        /* Ẩn danh sách course ban đầu */
         .course-list {
             display: none;
-            margin-left: 50px; /* Thụt lề cho course */
-            list-style-type: none; /* Bỏ dấu chấm */
-            padding-left: 0; /* Bỏ thụt lề mặc định */
+            list-style-type: none;
+            padding-left: 0;
+            margin-left: 20px;
         }
 
-        /* Hiển thị course khi mở category */
         .expanded + .course-list {
             display: block;
         }
 
-        /* Căn chỉnh icon với tên danh mục */
         .category-item i {
-            margin-right: 8px; /* Khoảng cách giữa icon và tên */
+            margin-right: 8px;
         }
 
-        /* Giữ nguyên thụt lề của danh mục con */
-        .course-list .category-item {
-            padding-left: 40px;
+        .fa-chevron-right {
+            transition: transform 0.2s ease;
         }
 
-        /* Thụt lề cho khóa học của danh mục con */
-        /* Thụt lề cho các khóa học thuộc danh mục con */
-        .course-list .course-list {
-            margin-left: 70px; /* Tăng thêm thụt lề cho khóa học trong danh mục con */
+        .expanded .fa-chevron-right {
+            transform: rotate(90deg);
         }
 
+        .course-list li {
+            padding: 10px 20px;
+            margin-left: 40px;
+            background-color: #f9f9f9;
+        }
 
+        .course-list li:hover {
+            background-color: #e0e0e0;
+        }
+
+        .category-count {
+            background-color: #eee;
+            border-radius: 50%;
+            padding: 5px 10px;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .category-item span, .category-item .category-count {
+            flex-shrink: 0;
+        }
+
+        .category-name {
+            flex-grow: 1;
+            padding-left: 10px;
+        }
     </style>
 </head>
 <body id="page-top" layout:fragment="body">
@@ -109,26 +116,26 @@
 <div class="container-form">
     <h2>Categories</h2>
     <ul class="no-dots">
-        <!-- Chỉ lặp qua các danh mục cha (parent == 0) -->
+        <!-- Loop through parent categories -->
+        <!-- Loop through parent categories -->
         <li th:each="category : ${moodleCategories}" th:if="${category.categoryId == 0}">
-            <!-- Hiển thị danh mục cha với icon -->
             <div class="category-item" onclick="toggleCourses(this)">
-                <i class="fas fa-folder"></i> <!-- Icon thư mục -->
-                <span th:text="${category.name}">Category Name</span>
-                <i class="fas fa-chevron-right"></i> <!-- Icon mũi tên -->
+                <i class="fas fa-folder"></i>
+                <span class="category-name" th:text="${category.name}">Category Name</span>
+                <span class="category-count" th:text="${category.courseCount}">0</span>
+                <i class="fas fa-chevron-right"></i>
             </div>
 
-            <!-- Hiển thị danh mục con lồng bên trong danh mục cha -->
+            <!-- Display subcategories and courses under the parent category -->
             <ul class="no-dots course-list">
                 <li th:each="subCategory : ${moodleCategories}" th:if="${subCategory.categoryId == category.id}">
-                    <!-- Hiển thị danh mục con với icon -->
                     <div class="category-item" onclick="toggleCourses(this)">
-                        <i class="fas fa-folder"></i> <!-- Icon thư mục -->
-                        <span th:text="${subCategory.name}">Subcategory Name</span>
+                        <i class="fas fa-folder"></i>
+                        <span class="category-name" th:text="${subCategory.name}">Subcategory Name</span>
+                        <span class="category-count" th:text="${subCategory.courseCount}">0</span> <!-- Hiển thị số khóa học cho subcategory -->
                         <i class="fas fa-chevron-right"></i>
                     </div>
 
-                    <!-- Hiển thị khóa học trong danh mục con -->
                     <ul class="no-dots course-list">
                         <li th:each="course : ${moodleCourses}" th:if="${course.category == subCategory.id}">
                             <span th:text="${course.fullname}">Course Name</span>
@@ -136,16 +143,15 @@
                     </ul>
                 </li>
 
-                <!-- Hiển thị các khóa học thuộc danh mục cha -->
+                <!-- Display courses under the parent category -->
                 <li th:each="course : ${moodleCourses}" th:if="${course.category == category.id}">
                     <span th:text="${course.fullname}">Course Name</span>
                 </li>
             </ul>
         </li>
+
     </ul>
 </div>
-
-
 
 <script>
     function toggleCourses(element) {

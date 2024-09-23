@@ -35,7 +35,7 @@ public class SecurityConfig {
                         "/student-attempts", "//student-attempts/{quizId}", "/categories").authenticated() // Chỉ yêu cầu người dùng đã xác thực truy cập /signature
                 .requestMatchers("/student-test").permitAll()
                 .requestMatchers("/register").permitAll()
-                .requestMatchers("/home", "/css/**", "/js/**").permitAll().and()
+                .requestMatchers("/home", "/css/**", "/js/**", "/imgs/**", "/images/**").permitAll().and()
                 .formLogin()
                 .loginPage("/login")
                 .loginProcessingUrl("/login")

@@ -2,7 +2,7 @@ package com.example.demo.Dto;
 
 public class CoursesDto {
     private Integer id; // ID của khóa học trong ứng dụng web
-    private Integer webCourseId; // ID của khóa học trên Moodle
+    private Integer moodleCourseId;
     private String fullname;
     private String shortname;
     private Integer category;
@@ -18,12 +18,12 @@ public class CoursesDto {
         this.id = id;
     }
 
-    public Integer getWebCourseId() {
-        return webCourseId;
+    public Integer getMoodleCourseId() {
+        return moodleCourseId;
     }
 
-    public void setWebCourseId(Integer webCourseId) {
-        this.webCourseId = webCourseId;
+    public void setMoodleCourseId(Integer moodleCourseId) {
+        this.moodleCourseId = moodleCourseId;
     }
 
     public String getFullname() {

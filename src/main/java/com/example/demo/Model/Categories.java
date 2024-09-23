@@ -46,5 +46,6 @@ public class Categories {
     public void setParentCategoryId(Integer parentCategoryId) {
         this.parentCategoryId = parentCategoryId;
     }
+
 }
 

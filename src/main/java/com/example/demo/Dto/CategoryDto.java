@@ -3,12 +3,11 @@ package com.example.demo.Dto;
 public class CategoryDto {
     private Integer id;
     private String name;
-
     private Integer categoryId;
-
     private Integer parentCategoryId;
+    private int courseCount; // Đếm số lượng khóa học thuộc danh mục
 
-
+    // Getters and Setters
     public Integer getId() {
         return id;
     }
@@ -39,5 +38,13 @@ public class CategoryDto {
 
     public void setParentCategoryId(Integer parentCategoryId) {
         this.parentCategoryId = parentCategoryId;
+    }
+
+    public int getCourseCount() {
+        return courseCount;
+    }
+
+    public void setCourseCount(int courseCount) {
+        this.courseCount = courseCount;
     }
 }

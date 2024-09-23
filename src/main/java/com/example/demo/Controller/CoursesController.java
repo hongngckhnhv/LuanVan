@@ -73,8 +73,9 @@ public class CoursesController {
         // Lấy danh sách khóa học hiện có từ cơ sở dữ liệu
         List<Courses> existingCourses = repo.findAll();
         Set<Integer> existingCourseIds = existingCourses.stream()
-                .map(Courses::getWebCourseId)
+                .map(Courses::getMoodleCourseId)
                 .collect(Collectors.toSet());
+
 
         // Lưu trữ ID khóa học từ Moodle
         Set<Integer> moodleCourseIds = moodleCourses.stream()
@@ -91,7 +92,7 @@ public class CoursesController {
                 newCourse.setShortname(moodleCourse.getShortname());
                 newCourse.setDescription(moodleCourse.getDescription());
                 newCourse.setCategory(moodleCourse.getCategory());
-                newCourse.setWebCourseId(moodleCourse.getId());
+                newCourse.setMoodleCourseId(moodleCourse.getId());
                 newCourse.setCategoryName(moodleCourse.getCategoryName());
 
                 repo.save(newCourse);
@@ -99,7 +100,7 @@ public class CoursesController {
             } else {
                 // Nếu khóa học đã tồn tại, kiểm tra và cập nhật thông tin nếu cần
                 Courses existingCourse = existingCourses.stream()
-                        .filter(course -> course.getWebCourseId().equals(moodleCourse.getId()))
+                        .filter(course -> course.getMoodleCourseId().equals(moodleCourse.getId()))
                         .findFirst()
                         .orElse(null);
 
@@ -119,10 +120,11 @@ public class CoursesController {
 
         // Xóa các khóa học không còn tồn tại trên Moodle
         for (Courses existingCourse : existingCourses) {
-            if (!moodleCourseIds.contains(existingCourse.getWebCourseId())) {
+            if (!moodleCourseIds.contains(existingCourse.getMoodleCourseId())) {
                 repo.delete(existingCourse);
                 System.out.println("Deleted course: " + existingCourse.getFullname());
             }
+
         }
 
         System.out.println("Course synchronization completed.");
@@ -285,7 +287,6 @@ public class CoursesController {
             newCourse.setShortname(coursesDto.getShortname());
             newCourse.setCategory(coursesDto.getCategory());
             newCourse.setDescription(coursesDto.getDescription());
-            newCourse.setWebCourseId(moodleCourseId);
             newCourse.setCategoryName(categoryName); // Thiết lập categoryName
 
             repo.save(newCourse);

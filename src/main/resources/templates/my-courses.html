@@ -1,185 +1,161 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Course Overview</title>
+    <meta charset="utf-8"/>
     <link layout:href="@{/css/styles.css}" rel="stylesheet"/>
-    <!-- Add Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            margin: 0;
+            background-color: #f8f9fa; /* Màu nền nhẹ cho toàn trang */
+            font-family: Arial, sans-serif; /* Font chữ đơn giản và dễ đọc */
         }
 
-        .header {
+        h1 {
             text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .filters {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 0 10px;
-        }
-
-        .filters select, .filters input {
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #000;
-            border-radius: 4px;
-        }
-
-        .filters input {
-            width: 250px;
-        }
-
-        .filters input[type="text"] {
-            padding-right: 40px; /* For search icon */
-        }
-
-        .filters i {
-            position: relative;
-            right: 35px;
-            color: #888;
-        }
-
-        .courses {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            gap: 20px;
-            padding: 0 10px;
-        }
-
-        .course-box {
-            border: 1px solid #000;
-            border-radius: 8px;
-            width: calc(25% - 40px); /* Cho màn hình lớn */
-            height: 150px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-sizing: border-box;
-        }
-
-        /* Media query cho màn hình tablet */
-        @media (max-width: 1024px) {
-            .course-box {
-                width: calc(50% - 40px); /* Mỗi dòng 2 khối cho màn hình tablet */
-            }
-        }
-
-        /* Media query cho màn hình điện thoại */
-        @media (max-width: 768px) {
-            .course-box {
-                width: calc(100% - 40px); /* Mỗi dòng 1 khối cho màn hình nhỏ hơn */
-            }
-        }
-
-
-        .course-header {
-            background-color: lightblue;
-            width: 100%;
-            height: 40%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .course-info {
-            padding: 10px;
-            text-align: center;
-        }
-
-        /* Footer stays at the bottom */
-        .container {
-            flex: 1;
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: center;
+            color: #343a40; /* Màu đậm hơn cho tiêu đề */
             margin-top: 20px;
         }
 
-        .pagination a {
-            margin: 0 5px;
-            padding: 10px 15px;
-            text-decoration: none;
-            border: 1px solid #ccc;
-            color: #333;
-            border-radius: 4px;
+        .search-form {
+            text-align: center; /* Canh giữa form */
+            margin-bottom: 30px; /* Khoảng cách dưới form */
         }
 
-        .pagination a:hover {
-            background-color: #007bff;
-            color: white;
+        .search-form input[type="text"] {
+            padding: 10px 15px; /* Padding cho ô tìm kiếm */
+            width: 300px; /* Độ rộng của ô tìm kiếm */
+            border: 1px solid #ced4da; /* Đường viền nhẹ */
+            border-radius: 20px; /* Bo tròn góc ô tìm kiếm */
+            font-size: 14px;
+            outline: none; /* Ẩn viền khi nhấp vào */
+            transition: border-color 0.3s; /* Hiệu ứng khi thay đổi màu đường viền */
         }
 
-        .pagination a.active {
-            background-color: #007bff;
-            color: white;
+        .search-form input[type="text"]:focus {
+            border-color: #007bff; /* Đổi màu viền khi focus */
+        }
+
+        .search-form button {
+            background-color: #007bff; /* Màu nền xanh cho nút */
+            color: #ffffff; /* Màu chữ trắng */
+            border: none;
+            border-radius: 20px; /* Bo tròn góc nút */
+            padding: 10px 20px; /* Padding cho nút */
+            font-size: 14px;
+            cursor: pointer; /* Hiệu ứng con trỏ chuột */
+            margin: 5px; /* Khoảng cách giữa các nút */
+            transition: background-color 0.3s, transform 0.3s; /* Hiệu ứng khi hover */
+        }
+
+        .search-form button:hover {
+            background-color: #0056b3; /* Màu nền đậm hơn khi hover */
+            transform: translateY(-2px); /* Di chuyển nhẹ lên trên khi hover */
+        }
+
+        .search-form button:focus {
+            outline: none; /* Ẩn viền khi nhấn nút */
+        }
+
+        .course-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center; /* Canh giữa các thẻ */
+            padding: 20px; /* Khoảng cách giữa các thẻ và cạnh container */
+        }
+
+        .course-card {
+            width: 300px; /* Đặt chiều rộng cụ thể cho thẻ khóa học */
+            margin: 15px; /* Khoảng cách giữa các thẻ */
+            background-color: #ffffff; /* Màu nền trắng cho thẻ */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Hiệu ứng đổ bóng */
+            border-radius: 10px; /* Bo tròn góc thẻ */
+            text-align: center;
+            overflow: hidden; /* Để bo góc đúng cách */
+            transition: transform 0.3s, box-shadow 0.3s; /* Hiệu ứng chuyển đổi cho thẻ */
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px); /* Di chuyển lên trên khi hover */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Tăng độ đổ bóng khi hover */
+        }
+
+        .course-card img {
+            width: 100%;
+            border-bottom: 1px solid #dee2e6; /* Đường kẻ dưới ảnh */
+            transition: transform 0.3s; /* Hiệu ứng phóng to ảnh khi hover */
+        }
+
+        .course-card img:hover {
+            transform: scale(1.05); /* Phóng to ảnh khi hover */
+        }
+
+        .course-card h3 {
+            margin-top: 15px;
+            font-size: 18px;
+            color: #495057; /* Màu chữ tối */
+        }
+
+        .course-card p {
+            font-size: 14px;
+            color: #6c757d; /* Màu chữ nhẹ hơn cho phần mô tả */
+            margin: 10px 20px; /* Khoảng cách giữa các đoạn văn bản */
+        }
+
+        .course-card button {
+            background-color: #007bff; /* Màu nền xanh */
+            color: #ffffff; /* Màu chữ trắng */
+            border: none;
+            border-radius: 5px; /* Bo tròn góc nút */
+            padding: 10px 20px; /* Padding cho nút */
+            font-size: 14px;
+            cursor: pointer; /* Hiệu ứng con trỏ chuột */
+            margin-bottom: 15px;
+            transition: background-color 0.3s; /* Hiệu ứng chuyển đổi màu nền */
+        }
+
+        .course-card button:hover {
+            background-color: #0056b3; /* Màu nền đậm hơn khi hover */
         }
     </style>
 </head>
 <body id="page-top" layout:fragment="body">
-<div class="container">
-    <div class="header">
-        <h1>Tổng quan về khóa học</h1>
-    </div>
-    <div class="filters">
-        <div>
-            <label for="category">Courses:</label>
-            <select id="category" name="category" th:field="*{category}">
-                <option value="all" th:value="all" th:text="#{all}">ALL</option>
-                <!-- Các option khác được tải động từ backend -->
-                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
-            </select>
-        </div>
-        <div>
-            <input type="text" placeholder="Tìm kiếm..." th:value="${searchTerm}"/>
-            <i class="fas fa-search"></i>
-        </div>
-        <div>
-            <label for="open">Mở:</label>
-            <select id="open" name="pageSize" th:field="*{pageSize}">
-                <option value="5" th:value="5" th:text="#{five}">5</option>
-                <option value="10" th:value="10" th:text="#{ten}">10</option>
-                <option value="20" th:value="20" th:text="#{twenty}">20</option>
-            </select>
-        </div>
-    </div>
+<h1>Các khóa học của tôi</h1>
 
-    <!-- Courses -->
-    <div class="courses">
-        <div th:each="course : ${courses}" class="course-box">
-            <div class="course-header">
-                <span th:text="${course.name}">Tên khóa học</span>
-            </div>
-            <div class="course-info">
-                <a th:href="@{/course-details/{courseId}(courseId=${course.id})}"
-                   th:text="${course.name} + ' - ' + ${course.teacher}">Tên học phần (Mã HP) - Tên GV</a>
-            </div>
+<!-- Form tìm kiếm và điều hướng -->
+<form action="/my-courses-student" method="post" class="search-form">
+    <input type="hidden" name="username" th:value="${username}"/>
+    <input type="text" name="searchQuery" placeholder="Tìm kiếm khóa học..." th:value="${searchQuery}" />
+    <button type="submit" style="border: none; background: none; cursor: pointer;">
+        <i class="fas fa-search" style="font-size: 20px; color: #007bff;"></i>
+    </button>
+    <button type="submit" name="sort" value="name">Sắp xếp theo tên</button>
+    <button type="submit" name="showAll" value="true">Hiển thị tất cả</button>
+</form>
+
+<!-- Danh sách khóa học hiển thị -->
+<!-- Danh sách khóa học hiển thị -->
+<div class="course-container">
+    <div class="course-card" th:each="course : ${userCourses}">
+        <img th:src="@{/imgs/course.jpg}" alt="Course Image"/>
+        <h3 th:text="${course}">Tên khóa học</h3>
+        <p>Giảng viên không xác định</p>
+        <p>Mức độ hoàn thành không xác định</p>
+
+        <!-- Hiển thị danh sách categories -->
+        <div class="course-categories">
+            <p>Danh mục:</p>
+            <ul>
+                <li th:each="category : ${categories}" th:text="${category.name}">Tên Category</li>
+            </ul>
         </div>
-    </div>
 
-    <!-- Pagination -->
-    <div class="pagination">
-        <a th:if="${pageNumber > 1}" th:href="@{(page=${pageNumber - 1}, size=${pageSize})}">&laquo; Trước</a>
-        <a th:each="i : ${#numbers.sequence(1, totalPages)}"
-           th:classappend="${i == pageNumber} ? 'active'"
-           th:href="@{(page=${i}, size=${pageSize})}" th:text="${i}">1</a>
-        <a th:if="${pageNumber < totalPages}" th:href="@{(page=${pageNumber + 1}, size=${pageSize})}">Sau &raquo;</a>
+        <button>Xem chi tiết</button>
     </div>
-
 </div>
+
+
 </body>
 </html>

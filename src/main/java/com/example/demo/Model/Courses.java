@@ -2,8 +2,6 @@ package com.example.demo.Model;
 
 import jakarta.persistence.*;
 
-import java.util.Date;
-
 @Entity
 @Table(name = "courses")
 public class Courses {
@@ -11,16 +9,14 @@ public class Courses {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "web_course_id") // Đặt tên cho cột lưu trữ ID của khóa học trên web
-    private Integer webCourseId; // Trường mới để lưu trữ ID của khóa học trên web
+    @Column(name = "moodle_course_id") // Đặt tên cho cột lưu trữ ID của khóa học trên Moodle
+    private Integer moodleCourseId; // ID của khóa học trên Moodle
 
     private String fullname;
     private String shortname;
     private Integer category;
     private String description;
     private String categoryName;
-
-
 
     // Getters và setters
     public Integer getId() {
@@ -31,12 +27,12 @@ public class Courses {
         this.id = id;
     }
 
-    public Integer getWebCourseId() {
-        return webCourseId;
+    public Integer getMoodleCourseId() {
+        return moodleCourseId;
     }
 
-    public void setWebCourseId(Integer webCourseId) {
-        this.webCourseId = webCourseId;
+    public void setMoodleCourseId(Integer moodleCourseId) {
+        this.moodleCourseId = moodleCourseId;
     }
 
     public String getFullname() {
