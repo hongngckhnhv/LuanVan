@@ -1,5 +1,6 @@
 package com.example.demo.Controller;
 
+import com.example.demo.Model.Categories;
 import com.example.demo.Repository.CategoriesRepo;
 import com.example.demo.Repository.CourseRepo;
 import org.json.JSONArray;
@@ -66,6 +67,9 @@ public class MyCoursesStudentController {
         // Gọi phương thức để lấy khóa học của người dùng
         List<String> userCourses = getUserCourses(username); // Lấy danh sách khóa học
         model.addAttribute("userCourses", userCourses);
+
+        System.out.println("Username: " + username);
+        System.out.println("User Courses: " + userCourses);
 
         return "my-courses"; // Trả về view chứa danh sách khóa học
     }

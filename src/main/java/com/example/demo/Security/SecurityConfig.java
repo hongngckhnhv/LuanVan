@@ -30,12 +30,12 @@ public class SecurityConfig {
 
         http.csrf().disable().authorizeHttpRequests()
 
-                .requestMatchers("/create_course", "/layout_course", "/edit_course", "/delete_course",
-                        "/students-and-courses", "/student-tests/{testId}", "/student-tests","/delete_moodle_course","/my-courses-student","/course-details/{courseId}",
+                .requestMatchers("/create_course", "/layout_course", "/edit_course", "/delete_course","/my-courses-student",
+                        "/students-and-courses", "/student-tests/{testId}", "/student-tests","/delete_moodle_course","/course-details/{courseId}",
                         "/student-attempts", "//student-attempts/{quizId}", "/categories").authenticated() // Chỉ yêu cầu người dùng đã xác thực truy cập /signature
                 .requestMatchers("/student-test").permitAll()
                 .requestMatchers("/register").permitAll()
-                .requestMatchers("/home", "/css/**", "/js/**", "/imgs/**", "/images/**").permitAll().and()
+                .requestMatchers("/imgs/**", "/images/**","/home", "/css/**", "/js/**").permitAll().and()
                 .formLogin()
                 .loginPage("/login")
                 .loginProcessingUrl("/login")

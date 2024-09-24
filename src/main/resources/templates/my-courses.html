@@ -135,11 +135,10 @@
     <button type="submit" name="showAll" value="true">Hiển thị tất cả</button>
 </form>
 
-<!-- Danh sách khóa học hiển thị -->
-<!-- Danh sách khóa học hiển thị -->
+<!-- Danh sách khóa học hiển thị-->
 <div class="course-container">
     <div class="course-card" th:each="course : ${userCourses}">
-        <img th:src="@{/imgs/course.jpg}" alt="Course Image"/>
+        <img th:src="@{/imgs/courses.png}" alt="Course Image"/>
         <h3 th:text="${course}">Tên khóa học</h3>
         <p>Giảng viên không xác định</p>
         <p>Mức độ hoàn thành không xác định</p>
