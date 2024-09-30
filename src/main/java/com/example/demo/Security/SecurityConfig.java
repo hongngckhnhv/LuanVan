@@ -30,7 +30,7 @@ public class SecurityConfig {
 
         http.csrf().disable().authorizeHttpRequests()
 
-                .requestMatchers("/create_course", "/layout_course", "/edit_course", "/delete_course","/my-courses-student",
+                .requestMatchers("/create_course", "/layout_course", "/edit_course", "/delete_course","/my-courses-student", "/delete_category", "/edit_course","/edit_course/{id}",
                         "/students-and-courses", "/student-tests/{testId}", "/student-tests","/delete_moodle_course","/course-details/{courseId}",
                         "/student-attempts", "//student-attempts/{quizId}", "/categories").authenticated() // Chỉ yêu cầu người dùng đã xác thực truy cập /signature
                 .requestMatchers("/student-test").permitAll()

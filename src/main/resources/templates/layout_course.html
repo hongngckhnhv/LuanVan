@@ -31,23 +31,46 @@
             text-align: center;
         }
 
-        .category-list {
+        .category-list, .course-list {
             list-style-type: none;
             padding-left: 0;
         }
 
-        .category-item {
+        .category-item, .course-item {
             cursor: pointer;
-            padding: 10px;
+            padding: 15px;
             border: 1px solid #dee2e6;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
             border-radius: 5px;
             background-color: #f8f9fa;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .category-item:hover {
+        .category-item:hover, .course-item:hover {
             background-color: #e2e6ea;
+            transform: translateY(-2px);
+        }
+
+        .category-name, .course-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .button-container {
+            margin-right: 10px; /* Thay đổi khoảng cách theo ý muốn */
+        }
+
+        .btn-danger {
+            margin-left: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
         }
 
         .table th, .table td {
@@ -89,50 +112,71 @@
 <section class="py-5 bg-light content">
     <div class="container mt-5">
         <div class="row">
+            <!-- Thông báo thành công hoặc lỗi -->
+            <div th:if="${message}" class="alert alert-success" role="alert" th:text="${message}"></div>
+            <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
             <!-- Categories Section -->
             <div class="col-md-6">
                 <h3>Categories</h3>
                 <ul class="category-list">
-                    <li th:each="category : ${categories}" class="category-item"
-                        onclick="showCourses([[${category.id}]])" th:text="${category.name}"></li>
-                    <li th:each="moodleCategory : ${moodleCategories}" class="category-item"
-                        onclick="showCourses([[${moodleCategory.id}]])" th:text="${moodleCategory.name}"></li>
+                    <!-- Lặp qua danh sách categories -->
+                    <li th:each="category : ${categories}" class="category-item">
+                        <span class="category-name" th:text="${category.name}"></span>
+                        <form th:action="@{/delete_category}" method="post" style="display:inline;">
+                            <input type="hidden" name="id" th:value="${category.id}" />
+                            <button class="btn btn-danger btn-sm" type="submit">Xóa</button>
+                        </form>
+                    </li>
+
+                    <!-- Lặp qua danh sách moodleCategories -->
+                    <li th:each="moodleCategory : ${moodleCategories}" class="category-item">
+                        <span class="category-name" th:text="${moodleCategory.name}"></span>
+                        <form th:action="@{/delete_category}" method="post" style="display:inline;">
+                            <input type="hidden" name="id" th:value="${moodleCategory.id}" />
+                            <button class="btn btn-danger btn-sm" type="submit">Xóa</button>
+                        </form>
+                    </li>
                 </ul>
             </div>
 
             <!-- Courses Section -->
             <div class="col-md-6">
                 <h3>Courses</h3>
-                <table class="table table-bordered">
-                    <thead class="thead-dark">
-                    <tr>
-                        <th>Full Name</th>
-                        <th>Short Name</th>
-                        <th>Category</th>
-                        <th>Action</th>
-                    </tr>
-                    </thead>
-                    <tbody id="courseList">
-                    <tr th:each="moodleCourse : ${moodleCourses}" th:data-category-id="${moodleCourse.category}">
-                        <td th:text="${moodleCourse.fullname}"></td>
-                        <td th:text="${moodleCourse.shortname}"></td>
-                        <td th:text="${moodleCourse.categoryName}"></td>
-                        <td style="white-space: nowrap">
-                            <a class="btn btn-primary btn-sm" th:href="@{/edit_moodle_course(id=${moodleCourse.id})}">Edit</a>
+                <ul class="course-list" style="list-style-type: none; padding: 0;">
+                    <!-- Loop through moodleCourses -->
+                    <li th:each="moodleCourse : ${moodleCourses}" class="course-item" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #dee2e6; margin-bottom: 10px; border-radius: 5px; background-color: #f8f9fa; transition: background-color 0.3s ease, transform 0.2s;">
+                        <!-- Course Information -->
+                        <div style="flex-grow: 1;">
+                            <span class="course-name" th:text="${moodleCourse.fullname}" style="font-weight: bold; font-size: 1.1rem;"></span><br/>
+                            <small th:text="${moodleCourse.shortname}" style="color: #6c757d;"></small><br/>
+                            <small th:text="${moodleCourse.categoryName}" style="color: #6c757d;"></small>
+                        </div>
+
+                        <!-- Buttons Container -->
+                        <div style="white-space: nowrap;">
+                            <!-- Edit Button -->
+                            <a class="btn btn-primary btn-sm" th:href="@{/edit_course(moodle_course_id=${moodleCourse.id})}">Edit</a>
+                        </div>
+
+                        <div style="white-space: nowrap; display: inline;">
+                            <!-- Delete Form -->
                             <form th:action="@{/delete_moodle_course}" method="post" class="delete-form" style="display: inline;">
                                 <input type="hidden" name="moodleCourseId" th:value="${moodleCourse.moodleCourseId}" />
                                 <input type="hidden" name="id" th:value="${moodleCourse.id}" />
                                 <button class="btn btn-danger btn-sm" type="button" onclick="deleteCourse(this)">Delete</button>
                             </form>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+                        </div>
+
+                    </li>
+                </ul>
             </div>
+
+
+
         </div>
     </div>
 </section>
-
 
 <!-- Footer-->
 <footer class="bg-dark py-4 mt-auto">
@@ -176,10 +220,11 @@
             }
         });
     }
+
     function deleteCourse(button) {
-        const row = button.closest('tr');
-        const moodleCourseId = row.querySelector('input[name="moodleCourseId"]').value;
-        const id = row.querySelector('input[name="id"]').value;
+        const listItem = button.closest('li'); // Target the closest li element
+        const moodleCourseId = listItem.querySelector('input[name="moodleCourseId"]').value;
+        const id = listItem.querySelector('input[name="id"]').value;
 
         if (confirm('Are you sure you want to delete this Moodle course?')) {
             const formData = new FormData();
@@ -189,16 +234,41 @@
             fetch('/delete_moodle_course', {
                 method: 'POST',
                 body: formData
-            }).then(response => response.text())
-                .then(data => {
-                    row.style.display = 'none';  // Ẩn khóa học khỏi danh sách
-                    alert('Course deleted successfully.');
-                }).catch(error => {
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            }).then(data => {
+                listItem.style.display = 'none'; // Hide the list item after deletion
+                alert('Course deleted successfully.');
+            }).catch(error => {
                 console.error('Error:', error);
                 alert('Failed to delete course.');
             });
         }
     }
 
-</script>
+    function deleteCategory(categoryId) {
+        if (confirm('Bạn có chắc muốn xóa category này?')) {
+            const formData = new FormData();
+            formData.append('id', categoryId);
 
+            fetch('/delete_category', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            }).then(data => {
+                alert('Category đã xóa thành công.');
+                location.reload(); // Tải lại trang để cập nhật danh sách
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('Không thể xóa category.');
+            });
+        }
+    }
+</script>

@@ -2,17 +2,16 @@
 <html lang="en"
       xmlns:th="http://thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}"
->
+      layout:decorate="~{layout}">
 <head>
     <meta charset="UTF-8">
     <link layout:href="@{/css/styles.css}" rel="stylesheet" />
-    <title>Cập nhật khóa học</title>
+    <title>Update Course</title>
 
     <style>
         .notification, .notification-success {
             background-color: #FA8072;
-            color: #fff;
+            color: #fff; /* Giữ màu thông báo lỗi/thành công là màu trắng */
             padding: 10px;
             border-radius: 3px;
             text-align: center;
@@ -22,15 +21,19 @@
             background-color: #3CB371;
         }
 
+        /* Màu chữ tiêu đề và nút */
         .header-title, .btn {
-            color: #fff;
+            color: #000; /* Đổi màu sang đen */
             margin-top: 10px;
             margin-bottom: 10px;
         }
+
+        /* Màu chữ cho các label */
         .col-sm-4 {
-            color: white;
+            color: #000; /* Đổi màu sang đen */
         }
     </style>
+
 </head>
 <body id="page-top" layout:fragment="body">
 <header class="masthead">
@@ -38,57 +41,85 @@
         <div class="row gx-4 gx-lg-5 h-100 align-items-center justify-content-center text-center">
             <div class="col-lg-5 align-self-lg-center">
                 <div class="container">
-                    <h2 class="header-title">Cập nhật khóa học</h2>
-                    <form method="post" th:action="@{/edit_course}" th:object="${coursesDto}">
-                        <input type="hidden" th:field="${coursesDto.id}" id="id">
+                    <h2 class="header-title">Update Course</h2>
+
+                    <!-- Thông báo thành công -->
+                    <div th:if="${successMessage}" class="alert alert-success">
+                        <p th:text="${successMessage}"></p>
+                    </div>
+
+                    <!-- Thông báo lỗi -->
+                    <div th:if="${errorMessage}" class="alert alert-danger">
+                        <p th:text="${errorMessage}"></p>
+                    </div>
+
+                    <form method="post" action="/edit_course" th:object="${coursesDto}">
+                        <input type="hidden" th:field="*{moodleCourseId}">
 
                         <div class="row mb-3">
                             <label class="col-sm-4 col-form-label" for="fullname">Full Name</label>
                             <div class="col-sm-8">
-                                <input class="form-control" th:field="${coursesDto.fullname}" id="fullname">
-                                <p th:if="${#fields.hasErrors('fullname')}" th:errorclass="text-danger" th:errors="${coursesDto.fullname}"></p>
+                                <input class="form-control" th:field="*{fullname}" id="fullname">
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <label class="col-sm-4 col-form-label" for="shortname">Short Name</label>
                             <div class="col-sm-8">
-                                <input class="form-control" th:field="${coursesDto.shortname}" id="shortname">
-                                <p th:if="${#fields.hasErrors('shortname')}" th:errorclass="text-danger" th:errors="${coursesDto.shortname}"></p>
+                                <input class="form-control" th:field="*{shortname}" id="shortname">
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <label class="col-sm-4 col-form-label" for="category">Category</label>
                             <div class="col-sm-8">
-                                <select class="form-select" th:field="${coursesDto.category}" id="category">
-                                    <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                                <select class="form-select" th:field="*{category}" id="category">
+                                    <option th:each="category : ${categories}"
+                                            th:value="${category.categoryId}"
+                                            th:text="${category.name}"
+                                            th:selected="*{category} == ${category.categoryId}">
+                                    </option>
                                 </select>
-                                <p th:if="${#fields.hasErrors('category')}" th:errorclass="text-danger" th:errors="${coursesDto.category}"></p>
+
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <label class="col-sm-4 col-form-label" for="description">Description</label>
                             <div class="col-sm-8">
-                                <input class="form-control" th:field="${coursesDto.description}" id="description">
-                                <p th:if="${#fields.hasErrors('description')}" th:errorclass="text-danger" th:errors="${coursesDto.description}"></p>
+                                <textarea class="form-control" th:field="*{description}" id="description"></textarea>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="offset-sm-4 col-sm-4 d-grid">
-                                <button type="submit" class="btn btn-primary">Update</button>
-                            </div>
-                            <div class="offset-sm-4 col-sm-4 d-grid">
-                                <a class="btn btn-primary" href="/layout_course" role="button">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Submit</button>
                             </div>
                         </div>
                     </form>
+
                 </div>
             </div>
         </div>
     </div>
 </header>
+
+<!-- Chỉ render script nếu có successMessage -->
+<div th:if="${successMessage}">
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            var successMessage = /*[[${successMessage}]]*/ '';
+            console.log("Success message received:", successMessage);  // In ra để kiểm tra giá trị
+
+            // Nếu có thông báo thành công thì hiện alert trước
+            if (successMessage !== '') {
+                setTimeout(function() {
+                    alert(successMessage);  // Hiển thị thông báo thành công
+                    window.location.href = '/layout_course';  // Chuyển trang sau khi người dùng bấm OK
+                }, 100); // Chờ 100ms để đảm bảo alert hiển thị
+            }
+        });
+    </script>
+</div>
 </body>
 </html>

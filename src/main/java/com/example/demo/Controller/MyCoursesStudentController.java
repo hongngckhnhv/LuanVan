@@ -68,7 +68,7 @@ public class MyCoursesStudentController {
         List<String> userCourses = getUserCourses(username); // Lấy danh sách khóa học
         model.addAttribute("userCourses", userCourses);
 
-        System.out.println("Username: " + username);
+      //  System.out.println("Username: " + username);
         System.out.println("User Courses: " + userCourses);
 
         return "my-courses"; // Trả về view chứa danh sách khóa học
@@ -114,6 +114,8 @@ public class MyCoursesStudentController {
         String getStudentsFunction = "core_user_get_users";
         String getUserCoursesFunction = "core_enrol_get_users_courses";
 
+        System.out.println("Username: " + username);
+
         // Gửi yêu cầu API để lấy thông tin sinh viên từ Moodle dựa trên username
         String getStudentsUrl = domainName + "/webservice/rest/server.php" +
                 "?wstoken=" + token +
@@ -124,15 +126,27 @@ public class MyCoursesStudentController {
 
         // Gửi yêu cầu GET đến API Moodle
         String studentsResponse = restTemplate.getForObject(getStudentsUrl, String.class);
+
+        // In ra phản hồi từ Moodle API để kiểm tra
+        System.out.println("Response from Moodle API: " + studentsResponse);
+
         int userId = 0;
 
         // Trích xuất thông tin ID của người dùng từ kết quả
         try {
             JSONObject jsonObject = new JSONObject(studentsResponse);
-            JSONArray users = jsonObject.getJSONArray("users");
-            if (users.length() > 0) {
-                JSONObject user = users.getJSONObject(0); // Lấy thông tin user đầu tiên tìm thấy
-                userId = user.getInt("id");
+
+            // Kiểm tra xem JSON có chứa trường 'users' hay không
+            if (jsonObject.has("users")) {
+                JSONArray users = jsonObject.getJSONArray("users");
+                if (users.length() > 0) {
+                    JSONObject user = users.getJSONObject(0); // Lấy thông tin user đầu tiên tìm thấy
+                    userId = user.getInt("id");
+                } else {
+                    System.out.println("Không tìm thấy người dùng với username: " + username);
+                }
+            } else {
+                System.out.println("Không tìm thấy trường 'users' trong phản hồi.");
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -150,6 +164,7 @@ public class MyCoursesStudentController {
                 "&moodlewsrestformat=json" +
                 "&userid=" + userId;
 
+        System.out.println("UserID: " + userId);
         String coursesResponse = restTemplate.getForObject(getUserCoursesUrl, String.class);
 
         try {
@@ -167,6 +182,7 @@ public class MyCoursesStudentController {
 
         return userCourses; // Trả về danh sách khóa học
     }
+
 
     // Phương thức lọc khóa học theo tên
     private List<String> filterCoursesByName(List<String> userCourses, String searchQuery) {

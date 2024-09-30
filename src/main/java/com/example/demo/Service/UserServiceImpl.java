@@ -30,17 +30,17 @@ public class UserServiceImpl implements UserService {
         return userRepo.save(user);
     }
 
-    @Override
-    public void delete(int id) {
-        userRepo.deleteById(id); // Xóa người dùng theo ID
-    }
-
-    @Override
-    public User update(User user) {
-        // Có thể mã hóa lại mật khẩu nếu cần thiết
-        if (user.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-        }
-        return userRepo.save(user); // Cập nhật thông tin người dùng
-    }
+//    @Override
+//    public void delete(int id) {
+//        userRepo.deleteById(id); // Xóa người dùng theo ID
+//    }
+//
+//    @Override
+//    public User update(User user) {
+//        // Có thể mã hóa lại mật khẩu nếu cần thiết
+//        if (user.getPassword() != null) {
+//            user.setPassword(passwordEncoder.encode(user.getPassword()));
+//        }
+//        return userRepo.save(user); // Cập nhật thông tin người dùng
+//    }
 }

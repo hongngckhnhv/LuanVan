@@ -6,6 +6,6 @@ import com.example.demo.Model.User;
 public interface UserService {
     User findByUsername(String username);
     User save(UserDto userDto);
-    void delete(int id);
-    User update(User user); // Thêm phương thức update
+//    void delete(int id);
+//    User update(User user); // Thêm phương thức update
 }
