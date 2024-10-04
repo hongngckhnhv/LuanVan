@@ -6,6 +6,7 @@ import com.example.demo.Model.Categories;
 import com.example.demo.Model.Courses;
 import com.example.demo.Repository.CategoriesRepo;
 import com.example.demo.Repository.CourseRepo;
+import com.example.demo.Service.CategoryService;
 import com.example.demo.Service.CoursesService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,12 +34,14 @@ public class CoursesController {
     private final CourseRepo repo;
     private final CategoriesRepo categoryRepo;
     private final CoursesService coursesService; // Tiêm service qua constructor
+    private final CategoryService categoryService;
 
     @Autowired
-    public CoursesController(CourseRepo repo, CategoriesRepo categoryRepo, CoursesService coursesService) {
+    public CoursesController(CourseRepo repo, CategoriesRepo categoryRepo, CoursesService coursesService, CategoryService categoryService) {
         this.repo = repo;
         this.categoryRepo = categoryRepo;
         this.coursesService = coursesService;
+        this.categoryService = categoryService;
     }
 
 
@@ -50,206 +53,29 @@ public class CoursesController {
 
     @GetMapping("/layout_course")
     public String showCourseList(Model model) {
-        // Lấy dữ liệu khóa học từ Moodle
-        List<CoursesDto> moodleCourses = fetchCoursesFromMoodle();
-        // Đồng bộ khóa học từ Moodle
-        synchronizeCourses(moodleCourses);
-
-        // Lấy dữ liệu khóa học từ cơ sở dữ liệu
+        // Fetch courses from Moodle
+        List<CoursesDto> moodleCourses = coursesService.fetchCoursesFromMoodle();
+        // Synchronize courses between Moodle and the database
+        coursesService.synchronizeCourses(moodleCourses);
+        // Fetch courses from the database
         List<Courses> courses = repo.findAll();
+
+
+        // Luôn đồng bộ và cập nhật với Moodle
+        System.out.println("Syncing and updating categories from Moodle...");
+        categoryService.updateCategoriesFromMoodle();
+
+        // Sau khi đồng bộ, lấy lại danh sách danh mục từ CSDL
+        List<Categories> categories = categoryService.getAllCategories();
+
         model.addAttribute("courses", courses);
         model.addAttribute("moodleCourses", moodleCourses);
 
-        // Lấy danh mục từ Moodle và thêm vào mô hình
-        List<CategoryDto> moodleCategories = fetchCategoriesFromMoodle();
+        // Fetch categories from Moodle
+        List<CategoryDto> moodleCategories = coursesService.fetchCategoriesFromMoodle();
         model.addAttribute("moodleCategories", moodleCategories);
 
         return "layout_course";
-    }
-
-    private void synchronizeCourses(List<CoursesDto> moodleCourses) {
-        System.out.println("Starting course synchronization...");
-
-        // Lấy danh sách khóa học hiện có từ cơ sở dữ liệu
-        List<Courses> existingCourses = repo.findAll();
-        Set<Integer> existingCourseIds = existingCourses.stream()
-                .map(Courses::getMoodleCourseId)
-                .collect(Collectors.toSet());
-
-
-        // Lưu trữ ID khóa học từ Moodle
-        Set<Integer> moodleCourseIds = moodleCourses.stream()
-                .map(CoursesDto::getId)
-                .collect(Collectors.toSet());
-
-        for (CoursesDto moodleCourse : moodleCourses) {
-            System.out.println("Processing Moodle course: " + moodleCourse.getFullname());
-
-            if (!existingCourseIds.contains(moodleCourse.getId())) {
-                // Nếu khóa học không tồn tại, thêm vào cơ sở dữ liệu
-                Courses newCourse = new Courses();
-                newCourse.setFullname(moodleCourse.getFullname());
-                newCourse.setShortname(moodleCourse.getShortname());
-                newCourse.setDescription(moodleCourse.getDescription());
-                newCourse.setCategory(moodleCourse.getCategory());
-                newCourse.setMoodleCourseId(moodleCourse.getId());
-                newCourse.setCategoryName(moodleCourse.getCategoryName());
-
-                repo.save(newCourse);
-                System.out.println("Added new course: " + newCourse.getFullname());
-            } else {
-                // Nếu khóa học đã tồn tại, kiểm tra và cập nhật thông tin nếu cần
-                Courses existingCourse = existingCourses.stream()
-                        .filter(course -> course.getMoodleCourseId().equals(moodleCourse.getId()))
-                        .findFirst()
-                        .orElse(null);
-
-                if (existingCourse != null) {
-                    // Cập nhật thông tin khóa học nếu có thay đổi
-                    existingCourse.setFullname(moodleCourse.getFullname());
-                    existingCourse.setShortname(moodleCourse.getShortname());
-                    existingCourse.setDescription(moodleCourse.getDescription());
-                    existingCourse.setCategory(moodleCourse.getCategory());
-                    existingCourse.setCategoryName(moodleCourse.getCategoryName());
-
-                    repo.save(existingCourse);
-                    System.out.println("Updated course: " + existingCourse.getFullname());
-                }
-            }
-        }
-
-        // Xóa các khóa học không còn tồn tại trên Moodle
-        for (Courses existingCourse : existingCourses) {
-            if (!moodleCourseIds.contains(existingCourse.getMoodleCourseId())) {
-                repo.delete(existingCourse);
-                System.out.println("Deleted course: " + existingCourse.getFullname());
-            }
-
-        }
-
-        System.out.println("Course synchronization completed.");
-
-        // Kiểm tra các khóa học hiện có trong cơ sở dữ liệu sau khi đồng bộ
-        List<Courses> updatedCourses = repo.findAll();
-        System.out.println("Courses in database after synchronization: " + updatedCourses);
-    }
-
-    private List<CoursesDto> fetchCoursesFromMoodle() {
-        String functionName = "core_course_get_courses";
-
-        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-        parameters.add("moodlewsrestformat", "json");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(parameters, headers);
-
-        String serverUrl = domainName + "/webservice/rest/server.php" + "?wstoken=" + token + "&wsfunction=" + functionName;
-
-        RestTemplate restTemplate = new RestTemplate();
-        String response = restTemplate.postForObject(serverUrl, request, String.class);
-
-        System.out.println(serverUrl);
-        ObjectMapper mapper = new ObjectMapper();
-        List<CoursesDto> courseList = new ArrayList<>();
-        try {
-            JsonNode root = mapper.readTree(response);
-            if (root.isArray()) {
-                for (JsonNode courseNode : root) {
-                    int courseId = courseNode.path("id").asInt();
-                    if (courseId != 1) { // Loại bỏ khóa học với ID = 1
-                        CoursesDto course = new CoursesDto();
-                        course.setId(courseId);
-                        course.setFullname(courseNode.path("fullname").asText());
-                        course.setShortname(courseNode.path("shortname").asText());
-                        course.setDescription(courseNode.path("summary").asText());
-                        int categoryId = courseNode.path("categoryid").asInt();
-                        course.setCategory(categoryId);
-
-                        // Lấy tên danh mục từ Moodle
-                        String categoryName = fetchCategoryNameFromMoodle(categoryId);
-                        course.setCategoryName(categoryName);
-
-                        courseList.add(course);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return courseList;
-    }
-
-    private String fetchCategoryNameFromMoodle(int categoryId) {
-        String functionName = "core_course_get_categories";
-
-        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-        parameters.add("moodlewsrestformat", "json");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(parameters, headers);
-
-        String serverUrl = domainName + "/webservice/rest/server.php" + "?wstoken=" + token + "&wsfunction=" + functionName;
-
-        RestTemplate restTemplate = new RestTemplate();
-        String response = restTemplate.postForObject(serverUrl, request, String.class);
-
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            JsonNode root = mapper.readTree(response);
-            if (root.isArray()) {
-                for (JsonNode categoryNode : root) {
-                    int id = categoryNode.path("id").asInt();
-                    if (id == categoryId) {
-                        return categoryNode.path("name").asText();
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return "Unknown Category";
-    }
-
-    private List<CategoryDto> fetchCategoriesFromMoodle() {
-        String functionName = "core_course_get_categories";
-
-        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-        parameters.add("moodlewsrestformat", "json");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(parameters, headers);
-
-        String serverUrl = domainName + "/webservice/rest/server.php" + "?wstoken=" + token + "&wsfunction=" + functionName;
-
-        RestTemplate restTemplate = new RestTemplate();
-        String response = restTemplate.postForObject(serverUrl, request, String.class);
-
-        ObjectMapper mapper = new ObjectMapper();
-        List<CategoryDto> categoryList = new ArrayList<>();
-        try {
-            JsonNode root = mapper.readTree(response);
-            if (root.isArray()) {
-                for (JsonNode categoryNode : root) {
-                    CategoryDto category = new CategoryDto();
-                    category.setId(categoryNode.path("id").asInt());
-                    category.setName(categoryNode.path("name").asText());
-                    category.setCategoryId(categoryNode.path("parent").asInt()); // Nếu bạn có sử dụng field này
-                    categoryList.add(category);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return categoryList;
     }
 
     @GetMapping("/create_course")
@@ -257,13 +83,12 @@ public class CoursesController {
         CoursesDto coursesDto = new CoursesDto();
         model.addAttribute("coursesDto", coursesDto);
 
-        // Lấy danh sách category từ Moodle
-        List<CategoryDto> categoriesFromMoodle = fetchCategoriesFromMoodle();
+        // Lấy danh sách category từ Moodle qua MoodleService
+        List<CategoryDto> categoriesFromMoodle = coursesService.fetchCategoriesFromMoodle();
         model.addAttribute("categories", categoriesFromMoodle);
 
         return "create_course";
     }
-
 
     @PostMapping("/create_course")
     public String showCreateCourses(@Valid @ModelAttribute CoursesDto coursesDto, BindingResult bindingResult, Model model) {
@@ -272,11 +97,10 @@ public class CoursesController {
             return "create_course";
         }
 
-        // Tạo khóa học trên Moodle
-        String moodleResponse = createMoodleCourse(coursesDto);
-
-        if (moodleResponse != null && moodleResponse.contains("id")) {
-            Integer moodleCourseId = extractMoodleCourseId(moodleResponse);
+        // Create course using the service
+        Optional<Integer> moodleResponse = coursesService.createCourse(coursesDto);
+        if (moodleResponse.isPresent()) {
+            Integer moodleCourseId = moodleResponse.get();
 
             // Lấy categoryName từ cơ sở dữ liệu
             Optional<Categories> categoryOpt = categoryRepo.findById(coursesDto.getCategory());
@@ -290,7 +114,6 @@ public class CoursesController {
             newCourse.setCategoryName(categoryName); // Thiết lập categoryName
 
             repo.save(newCourse);
-
             return "redirect:/layout_course";
         } else {
             // Nếu tạo khóa học thất bại, trả về thông báo lỗi
@@ -300,107 +123,21 @@ public class CoursesController {
         }
     }
 
-
-    private String createMoodleCourse(CoursesDto coursesDto) {
-        // Kiểm tra nếu categoryId được chọn từ Moodle thì sử dụng trực tiếp categoryId đó
-        Integer moodleCategoryId = coursesDto.getCategory(); // Category lấy từ Moodle có thể truyền trực tiếp
-
-        String functionName = "core_course_create_courses";
-
-        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-        parameters.add("courses[0][fullname]", coursesDto.getFullname());
-        parameters.add("courses[0][shortname]", coursesDto.getShortname());
-        parameters.add("courses[0][categoryid]", String.valueOf(moodleCategoryId));
-        parameters.add("moodlewsrestformat", "json");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(parameters, headers);
-
-        String serverUrl = domainName + "/webservice/rest/server.php" + "?wstoken=" + token + "&wsfunction=" + functionName;
-
-        RestTemplate restTemplate = new RestTemplate();
-        String response = restTemplate.postForObject(serverUrl, request, String.class);
-
-        System.out.println(serverUrl);
-        System.out.println(response);
-
-        return response;
-    }
-
-
-    private Integer extractMoodleCourseId(String moodleResponse) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            JsonNode root = mapper.readTree(moodleResponse);
-            return root.path(0).path("id").asInt();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-
+    // xóa course
     @PostMapping("/delete_moodle_course")
     public String deleteMoodleCourse(@RequestParam("id") int courseId, RedirectAttributes redirectAttributes) {
-        System.out.println("Course ID: " + courseId); // Kiểm tra courseId
+        System.out.println("Course ID: " + courseId); // Log the courseId for debugging
 
-        boolean moodleSuccess = deleteCourseFromMoodle(courseId);
-        if (moodleSuccess) {
-            boolean dbSuccess = deleteCourseFromDatabase(courseId);
-            if (dbSuccess) {
-                redirectAttributes.addFlashAttribute("message", "Course deleted successfully.");
-            } else {
-                redirectAttributes.addFlashAttribute("error", "Failed to delete course from the database.");
-            }
+        boolean success = coursesService.deleteCourse(courseId);
+        if (success) {
+            redirectAttributes.addFlashAttribute("message", "Course deleted successfully.");
         } else {
-            redirectAttributes.addFlashAttribute("error", "Failed to delete course from Moodle.");
+            redirectAttributes.addFlashAttribute("error", "Failed to delete the course from Moodle or the database.");
         }
+
         return "redirect:/layout_course";
     }
 
-
-    private boolean deleteCourseFromDatabase(int courseId) {
-        try {
-            if (repo.existsById(courseId)) {
-                repo.deleteById(courseId);
-                return true;
-            } else {
-                System.out.println("Course with ID " + courseId + " does not exist in the database.");
-                return false;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    private boolean deleteCourseFromMoodle(int courseId) {
-
-        String functionName = "core_course_delete_courses";
-
-        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-        parameters.add("moodlewsrestformat", "json");
-        parameters.add("courseids[0]", String.valueOf(courseId));
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(parameters, headers);
-        String serverUrl = domainName + "/webservice/rest/server.php" + "?wstoken=" + token + "&wsfunction=" + functionName;
-
-        RestTemplate restTemplate = new RestTemplate();
-        try {
-            String response = restTemplate.postForObject(serverUrl, request, String.class);
-            System.out.println("Moodle Response: " + response); // Kiểm tra phản hồi từ Moodle
-
-            return response.contains("success");  // Hoặc điều chỉnh kiểm tra phản hồi cho phù hợp
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
 
     @GetMapping("/edit_course")
     public String showEditCourse(@RequestParam("moodle_course_id") Integer moodleCourseId, Model model) {

@@ -95,7 +95,6 @@ public class CategoriesController {
         }
     }
 
-
     @PostMapping("/delete_category")
     public String deleteCategory(@RequestParam("id") int categoryId, RedirectAttributes redirectAttributes) {
         try {
@@ -124,8 +123,6 @@ public class CategoriesController {
 
         return "redirect:/layout_course";
     }
-
-
 
 
 }

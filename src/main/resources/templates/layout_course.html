@@ -115,7 +115,6 @@
             <!-- Thông báo thành công hoặc lỗi -->
             <div th:if="${message}" class="alert alert-success" role="alert" th:text="${message}"></div>
             <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
-
             <!-- Categories Section -->
             <div class="col-md-6">
                 <h3>Categories</h3>
@@ -123,7 +122,10 @@
                     <!-- Lặp qua danh sách categories -->
                     <li th:each="category : ${categories}" class="category-item">
                         <span class="category-name" th:text="${category.name}"></span>
-                        <form th:action="@{/delete_category}" method="post" style="display:inline;">
+                        <span th:text="${category.parentCategoryId}">Parent ID</span>
+
+                        <!-- Chỉ hiển thị nút xóa nếu category không phải là root (parentCategoryId != 0) -->
+                        <form th:action="@{/delete_category}" method="post" style="display:inline;" th:if="${category.parentCategoryId != 0}">
                             <input type="hidden" name="id" th:value="${category.id}" />
                             <button class="btn btn-danger btn-sm" type="submit">Xóa</button>
                         </form>
@@ -132,7 +134,9 @@
                     <!-- Lặp qua danh sách moodleCategories -->
                     <li th:each="moodleCategory : ${moodleCategories}" class="category-item">
                         <span class="category-name" th:text="${moodleCategory.name}"></span>
-                        <form th:action="@{/delete_category}" method="post" style="display:inline;">
+
+                        <!-- Chỉ hiển thị nút xóa nếu moodleCategory không phải là root (parentCategoryId != 0) -->
+                        <form th:action="@{/delete_category}" method="post" style="display:inline;" th:if="${moodleCategory.parentCategoryId != 0}">
                             <input type="hidden" name="id" th:value="${moodleCategory.id}" />
                             <button class="btn btn-danger btn-sm" type="submit">Xóa</button>
                         </form>
