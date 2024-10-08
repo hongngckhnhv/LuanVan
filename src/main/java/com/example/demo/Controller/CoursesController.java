@@ -70,7 +70,7 @@ public class CoursesController {
 
         model.addAttribute("courses", courses);
         model.addAttribute("moodleCourses", moodleCourses);
-
+        model.addAttribute("categories", categories);
         // Fetch categories from Moodle
         List<CategoryDto> moodleCategories = coursesService.fetchCategoriesFromMoodle();
         model.addAttribute("moodleCategories", moodleCategories);

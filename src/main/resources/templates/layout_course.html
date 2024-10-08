@@ -31,22 +31,53 @@
             text-align: center;
         }
 
-        .category-list, .course-list {
-            list-style-type: none;
+        /* Reset padding and list-style for all ul elements */
+        ul {
             padding-left: 0;
+            list-style: none;
         }
 
-        .category-item, .course-item {
-            cursor: pointer;
-            padding: 15px;
-            border: 1px solid #dee2e6;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            background-color: #f8f9fa;
-            transition: background-color 0.3s ease, transform 0.2s;
+        .category-list, .subcategory-list {
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .category-item {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: flex-start; /* Căn các phần tử con về phía bên trái */
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            margin-bottom: 5px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .subcategory-list {
+            padding-left: 20px; /* Thụt vào 20px cho danh mục con */
+        }
+
+        .category-item i {
+            margin-right: 10px; /* Thêm khoảng cách giữa icon và tên category */
+        }
+
+        .category-name {
+            flex-grow: 1; /* Đảm bảo tên category chiếm toàn bộ không gian còn lại và căn trái */
+        }
+
+        .no-dots {
+            list-style-type: none; /* Bỏ dấu chấm tròn ở đầu các item */
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Căn trái cho danh mục */
+        .category-name, .course-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-align: left; /* Căn lề trái */
         }
 
         .category-item:hover, .course-item:hover {
@@ -54,18 +85,20 @@
             transform: translateY(-2px);
         }
 
-        .category-name, .course-name {
-            font-weight: bold;
-            font-size: 1.2rem;
+        /* Định dạng subcategory */
+        .subcategory-list {
+            padding-left: 20px; /* Thụt vào 20px cho danh mục con */
+            display: none; /* Đảm bảo các danh mục con không hiển thị khi load trang */
         }
 
-        .button-container {
-            margin-right: 10px; /* Thay đổi khoảng cách theo ý muốn */
+        .subcategory-item {
+            margin-left: 20px; /* Thêm margin-left cho từng subcategory */
         }
-
-        .btn-danger {
+        /* Nút chỉnh sửa và xóa */
+        .btn-danger, .btn-primary {
             margin-left: 10px;
             transition: background-color 0.3s;
+            font-size: 0.875rem; /* Kích thước nhỏ hơn cho nút */
         }
 
         .btn-danger:hover {
@@ -80,6 +113,7 @@
         .btn-sm {
             font-size: 0.875rem;
         }
+
     </style>
 </head>
 <body layout:fragment="body">
@@ -118,31 +152,41 @@
             <!-- Categories Section -->
             <div class="col-md-6">
                 <h3>Categories</h3>
-                <ul class="category-list">
-                    <!-- Lặp qua danh sách categories -->
-                    <li th:each="category : ${categories}" class="category-item">
-                        <span class="category-name" th:text="${category.name}"></span>
-                        <span th:text="${category.parentCategoryId}">Parent ID</span>
+                <ul class="category-list no-dots">
+                    <!-- Lặp qua danh sách root categories -->
+                    <li th:each="category : ${moodleCategories}" th:if="${category.parentCategoryId == 0}">
+                        <div class="category-item" onclick="toggleSubcategories(this)">
+                            <i class="fas fa-folder"></i>
+                            <span class="category-name" th:text="${category.name}"></span>
+                            <i class="fas fa-chevron-right"></i>
 
-                        <!-- Chỉ hiển thị nút xóa nếu category không phải là root (parentCategoryId != 0) -->
-                        <form th:action="@{/delete_category}" method="post" style="display:inline;" th:if="${category.parentCategoryId != 0}">
-                            <input type="hidden" name="id" th:value="${category.id}" />
-                            <button class="btn btn-danger btn-sm" type="submit">Xóa</button>
-                        </form>
-                    </li>
+                            <!-- Nút xóa chỉ hiển thị nếu category không phải root -->
+                            <form th:action="@{/delete_category}" method="post" style="display:inline;" th:if="${category.parentCategoryId != 0}">
+                                <input type="hidden" name="id" th:value="${category.id}" />
+                                <button class="btn btn-danger btn-sm" type="submit">Xóa</button>
+                            </form>
+                        </div>
 
-                    <!-- Lặp qua danh sách moodleCategories -->
-                    <li th:each="moodleCategory : ${moodleCategories}" class="category-item">
-                        <span class="category-name" th:text="${moodleCategory.name}"></span>
+                        <!-- Danh sách danh mục con (ẩn khi load trang) -->
+                        <ul class="no-dots subcategory-list hidden">
+                            <li th:each="subCategory : ${moodleCategories}" th:if="${subCategory.parentCategoryId == category.id}">
+                                <div class="category-item" onclick="toggleCourses(this)">
+                                    <i class="fas fa-folder"></i>
+                                    <span class="category-name" th:text="${subCategory.name}"></span>
+                                    <i class="fas fa-chevron-right"></i>
 
-                        <!-- Chỉ hiển thị nút xóa nếu moodleCategory không phải là root (parentCategoryId != 0) -->
-                        <form th:action="@{/delete_category}" method="post" style="display:inline;" th:if="${moodleCategory.parentCategoryId != 0}">
-                            <input type="hidden" name="id" th:value="${moodleCategory.id}" />
-                            <button class="btn btn-danger btn-sm" type="submit">Xóa</button>
-                        </form>
+                                    <!-- Nút xóa chỉ hiển thị nếu subCategory không phải root -->
+                                    <form th:action="@{/delete_category}" method="post" style="display:inline;" th:if="${subCategory.parentCategoryId != 0}">
+                                        <input type="hidden" name="id" th:value="${subCategory.id}" />
+                                        <button class="btn btn-danger btn-sm" type="submit">Xóa</button>
+                                    </form>
+                                </div>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>
+
 
             <!-- Courses Section -->
             <div class="col-md-6">
@@ -275,4 +319,22 @@
             });
         }
     }
+
+    function toggleSubcategories(element) {
+        element.classList.toggle('expanded');
+        let subcategoryList = element.nextElementSibling;
+        if (subcategoryList) {
+            subcategoryList.style.display = subcategoryList.style.display === 'none' || subcategoryList.style.display === '' ? 'block' : 'none';
+        }
+    }
+
+    function toggleCourses(element) {
+        element.classList.toggle('expanded');
+        let courseList = element.nextElementSibling;
+        if (courseList) {
+            courseList.style.display = courseList.style.display === 'none' || courseList.style.display === '' ? 'block' : 'none';
+        }
+    }
+
 </script>
+

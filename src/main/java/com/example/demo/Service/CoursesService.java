@@ -151,7 +151,8 @@ public class CoursesService {
                     CategoryDto category = new CategoryDto();
                     category.setId(categoryNode.path("id").asInt());
                     category.setName(categoryNode.path("name").asText());
-                    category.setCategoryId(categoryNode.path("parent").asInt());
+                    category.setCategoryId(categoryNode.path("id").asInt()); // Sửa đây để lấy id làm categoryId
+                    category.setParentCategoryId(categoryNode.path("parent").asInt()); // Lấy parent cho parentCategoryId
                     categoryList.add(category);
                 }
             }

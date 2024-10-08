@@ -100,6 +100,22 @@ public class CategoriesController {
         try {
             System.out.println("Deleting category with ID: " + categoryId);
 
+            // Lấy danh mục từ categoryId
+            Categories category = categoryService.findCategoryById(categoryId);
+
+            // In giá trị của parentCategoryId
+            Integer parentCategoryId = categoryService.getParentCategoryId(categoryId); // Gọi phương thức để lấy parentCategoryId
+            System.out.println("Parent Category ID: " + parentCategoryId); // In ra parentCategoryId
+
+            // Kiểm tra xem danh mục có phải là danh mục gốc không
+            if (parentCategoryId == 0) {
+                // Nếu là danh mục gốc, xử lý riêng (ví dụ: không cho phép xóa hoặc thông báo đặc biệt)
+                redirectAttributes.addFlashAttribute("error", "Cannot delete a root category.");
+                redirectAttributes.addFlashAttribute("messageType", "error");
+                return "redirect:/layout_course";
+            }
+
+            // Thực hiện logic xóa danh mục
             String newCategoryName = categoryService.deleteCategoryWithCourses(categoryId);
 
             if (newCategoryName != null) {
@@ -123,6 +139,5 @@ public class CategoriesController {
 
         return "redirect:/layout_course";
     }
-
 
 }

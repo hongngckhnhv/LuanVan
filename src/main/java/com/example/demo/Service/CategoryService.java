@@ -225,6 +225,13 @@ public class CategoryService {
         return null;
     }
     // xóa category
+
+    // Phương thức tìm kiếm category dựa vào categoryId
+    public Categories findCategoryById(Integer categoryId) {
+        return repo.findByCategoryId(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+    }
+
     @Transactional
     public void deleteCategoryById(int categoryId) {
         if (repo.findByCategoryId(categoryId).isPresent()) {
@@ -237,7 +244,17 @@ public class CategoryService {
 
     @Transactional
     public String deleteCategoryWithCourses(int categoryId) {
+        // Tìm danh mục hiện tại dựa trên categoryId
+        Categories category =repo.findByCategoryId(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+
+        // Kiểm tra xem danh mục có phải là danh mục gốc không
+        if (category.getParentCategoryId() == 0) {
+            throw new IllegalStateException("Cannot delete a root category.");
+        }
+
         List<Integer> courseIds = getCoursesInCategory(categoryId);
+
         if (courseIds.isEmpty()) {
             boolean moodleSuccess = deleteCategoryOnMoodle(categoryId);
             if (moodleSuccess) {
@@ -273,6 +290,13 @@ public class CategoryService {
         return null;
     }
 
+
+    // Phương thức lấy parentCategoryId của category theo categoryId
+    public Integer getParentCategoryId(Integer categoryId) {
+        Categories category = repo.findByCategoryId(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found for ID: " + categoryId));
+        return category.getParentCategoryId();
+    }
 
 
     // Hàm thông báo cho người dùng về danh mục đã di chuyển
