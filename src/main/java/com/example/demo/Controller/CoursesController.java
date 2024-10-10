@@ -60,7 +60,6 @@ public class CoursesController {
         // Fetch courses from the database
         List<Courses> courses = repo.findAll();
 
-
         // Luôn đồng bộ và cập nhật với Moodle
         System.out.println("Syncing and updating categories from Moodle...");
         categoryService.updateCategoriesFromMoodle();
